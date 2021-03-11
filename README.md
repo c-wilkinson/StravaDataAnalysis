@@ -9,7 +9,7 @@ Give it a name, a website and an "Authorization Callback Domain".  The "Authoriz
 
 Click authorise when you visit the above link
 
-3. You will go to a 404 not found page with the link the looks like this: -
+3. You will go to a 404 not found page with a link that looks like this: -
 > http://localhost/exchange_token?state=&code=[LONGCODEHERE]&scope=read,activity:read_all,profile:read_all
 
 Copy the code after "&code=" to save for step 4.
