@@ -11,6 +11,7 @@ Click authorise when you visit the above link
 
 3. You will go to a 404 not found page with the link the looks like this: -
 > http://localhost/exchange_token?state=&code=[LONGCODEHERE]&scope=read,activity:read_all,profile:read_all
+
 Copy the code after "&code=" to save for step 4.
 
 4. Open "initialiseTokens.py", paste your code from step 3 to the variable "copied_code".  Add the client_id from your Application on Strava to the client_id variable.  Add the client_secret from your Application on Strava to the client_secret variable.  Save the changes.
