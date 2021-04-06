@@ -37,11 +37,11 @@ def getLastDate():
     cur = conn.cursor()
     cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='activities';")
     result = cur.fetchone()
-    if result != None:
+    if result is None:
         # There is data, so let's grab the max datetime
         cur.execute("SELECT MAX(start_date_local) FROM activities;")
         result = cur.fetchone()
-        if result != None:
+        if result is None:
             # Found a max date
             lastActivityDate, = result
     conn.commit()

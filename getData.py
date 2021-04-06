@@ -40,8 +40,8 @@ while True:
         print(activityDataSet)
         break
     for currentActivity in range(len(activityDataSet)):
-        type = activityDataSet[currentActivity]['type']
-        if type.lower() == "run":
+        runType = activityDataSet[currentActivity]['type']
+        if runType.lower() == "run":
             runId = activityDataSet[currentActivity]['id']
             # Add columns that must exist
             activities.loc[currentActivity + (page-1)*200,'id'] = runId

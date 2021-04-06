@@ -1,6 +1,9 @@
 # StravaDataAnalysis
 Simple data extract from the Strava API to generate some data points I'm interested in.  If other people start using this, I'll try and streamline this process as much as I can.
 
+[![License: Unlicense](https://img.shields.io/badge/license-Unlicense-blue.svg)](http://unlicense.org/)
+[![CodeFactor](https://www.codefactor.io/repository/github/c-wilkinson/stravadataanalysis/badge)](https://www.codefactor.io/repository/github/c-wilkinson/stravadataanalysis)
+
 1. To use, create an Application on Strava.  This can be done here: https://www.strava.com/settings/api
 Give it a name, a website and an "Authorization Callback Domain".  The "Authorization Callback Domain" should be "local host".
 
