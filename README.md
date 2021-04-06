@@ -8,13 +8,13 @@ Simple data extract from the Strava API to generate some data points I'm interes
 1.To use, create an Application on Strava.  This can be done here: https://www.strava.com/settings/api
 Give it a name, a website and an "Authorization Callback Domain".  The "Authorization Callback Domain" should be "local host".
 
-2.Copy and paste the following link into your browser, replacing [CLIENTIDHERE] with your numeric Client ID found on your Strava application settings page.
-> [http://www.strava.com/oauth/authorize?client_id=[CLIENTIDHERE]&response_type=code&redirect_uri=http://localhost/exchange_token&approval_prompt=force&scope=profile:read_all,activity:read_all]
+2.Copy and paste the following link into your browser, replacing {CLIENTIDHERE} with your numeric Client ID found on your Strava application settings page.
+> http://www.strava.com/oauth/authorize?client_id={CLIENTIDHERE}&response_type=code&redirect_uri=http://localhost/exchange_token&approval_prompt=force&scope=profile:read_all,activity:read_all
 
 Click authorise when you visit the above link
 
 3.You will go to a 404 not found page with a link that looks like this: -
-> [http://localhost/exchange_token?state=&code=[LONGCODEHERE]&scope=read,activity:read_all,profile:read_all]
+> http://localhost/exchange_token?state=&code={LONGCODEHERE}&scope=read,activity:read_all,profile:read_all
 
 Copy the code after "&code=" to save for step 4.
 

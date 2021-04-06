@@ -1,8 +1,5 @@
 import requests
 import time
-import os
-import sqlite3
-import pyAesCrypt
 import databaseAccess
 
 client_id = '{{ secrets.CLIENTID }}'

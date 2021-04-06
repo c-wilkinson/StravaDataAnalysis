@@ -97,7 +97,7 @@ def encryptDatabase():
             os.remove('strava_temp.sqlite')
     else:
         print('Unable to find database to encrypt, skipping...')
-        
+
 def setActvities(activities):
     decryptDatabase()
     conn = sqlite3.connect('strava_temp.sqlite')
