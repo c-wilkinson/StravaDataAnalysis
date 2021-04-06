@@ -1,5 +1,4 @@
 import requests
-import json
 from databaseAccess import setConfig
 
 copied_code = '[LONGCODEHERE]'

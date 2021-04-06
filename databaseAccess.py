@@ -2,7 +2,6 @@ import json
 import os
 import sqlite3
 import pyAesCrypt
-import io
 from os import stat
 
 # Global variables for use by this file
@@ -18,7 +17,7 @@ def resetActivities():
     conn.commit()
     conn.close()
     encryptDatabase()
-    
+
 def resetSplits():
     decryptDatabase()
     conn = sqlite3.connect('strava_temp.sqlite')

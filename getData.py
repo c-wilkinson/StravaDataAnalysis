@@ -1,14 +1,8 @@
-import os
 import requests
-import json
 from datetime import datetime
 import time
 from refreshTokens import strava_tokens
 import pandas
-import matplotlib
-from matplotlib import pyplot
-from matplotlib import dates
-import numpy
 import databaseAccess
 calls = 0
 page = 1
@@ -76,7 +70,7 @@ while True:
                 print(splitsRequest)
                 break
             # Otherwise, let's take a look at the splits
-            splitsDataSet = pandas.DataFrame(splitsRequest['splits_metric']) 
+            splitsDataSet = pandas.DataFrame(splitsRequest['splits_metric'])
             splitsDataSet['id'] = runId
             splitsDataSet['date'] = splitsRequest['start_date']
             splitsDataSet['average_speed'] = splitsDataSet['average_speed']
