@@ -14,9 +14,9 @@ Click authorise when you visit the above link
 
 Copy the code after "&code=" to save for step 4.
 
-4. Open "initialiseTokens.py", paste your code from step 3 to the variable "copied_code".  Add the client_id from your Application on Strava to the client_id variable.  Add the client_secret from your Application on Strava to the client_secret variable.  Save the changes.
+4. Open "getTokens.py", paste your code from step 3 to the variable "copied_code".  Add the client_id from your Application on Strava to the client_id variable.  Add the client_secret from your Application on Strava to the client_secret variable.  Save the changes.
 
-5. Run "initialiseTokens.py".  This will create the initial tokens required for the script.
+5. Run "getTokens.py".  This will create the initial tokens required for the script.
 
 6. Open "refreshTokens.py", add the client_id from your Application on Strava to the client_id variable.  Add the client_secret from your Application on Strava to the client_secret variable.  Save the changes.
 
