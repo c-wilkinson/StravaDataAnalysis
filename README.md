@@ -5,6 +5,8 @@ Simple data extract from the Strava API to generate some data points I'm interes
 [![CodeFactor](https://www.codefactor.io/repository/github/c-wilkinson/stravadataanalysis/badge)](https://www.codefactor.io/repository/github/c-wilkinson/stravadataanalysis)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/baba43376e964984a52a9a12f7209ace)](https://www.codacy.com/gh/c-wilkinson/StravaDataAnalysis/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=c-wilkinson/StravaDataAnalysis&amp;utm_campaign=Badge_Grade)
 
+As I'm sure is obvious, I'm teaching myself python as I go so the code quality is not likely to be great.  Do with it as you wish.
+
 1.To use, create an Application on Strava.  This can be done here: https://www.strava.com/settings/api
 Give it a name, a website and an "Authorization Callback Domain".  The "Authorization Callback Domain" should be "local host".
 

@@ -2,12 +2,19 @@ import json
 import os
 import sqlite3
 import pyAesCrypt
+import pandas
 from os import stat
 
 # Global variables for use by this file
 bufferSize = {{ secrets.BUFFERSIZE }}
 password = '{{ secrets.ENCRYPTIONPASSWORD }}'
 
+# py -c 'import databaseAccess; databaseAccess.reset()'
+def reset():
+    resetActivities()
+    resetSplits()
+
+# py -c 'import databaseAccess; databaseAccess.resetActivities()'
 def resetActivities():
     decryptDatabase()
     conn = sqlite3.connect('strava_temp.sqlite')
@@ -18,6 +25,7 @@ def resetActivities():
     conn.close()
     encryptDatabase()
 
+# py -c 'import databaseAccess; databaseAccess.resetSplits()'
 def resetSplits():
     decryptDatabase()
     conn = sqlite3.connect('strava_temp.sqlite')
@@ -36,11 +44,11 @@ def getLastDate():
     cur = conn.cursor()
     cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='activities';")
     result = cur.fetchone()
-    if result is None:
+    if result is not None:
         # There is data, so let's grab the max datetime
         cur.execute("SELECT MAX(start_date_local) FROM activities;")
         result = cur.fetchone()
-        if result is None:
+        if result is not None:
             # Found a max date
             lastActivityDate, = result
     conn.commit()
@@ -106,8 +114,12 @@ def setActvities(activities):
     cur.execute('CREATE TABLE IF NOT EXISTS activities (id BIGINT, name NVARCHAR, upload_id BIGINT, type VARCHAR, distance NUMERIC, moving_time INT, average_speed NUMERIC, max_speed NUMERIC, total_elevation_gain NUMERIC, start_date_local DATETIME, average_cadence NUMERIC, UNIQUE(id));')
     conn.commit()
     for currentActivity in range(len(activities)):
-        cur.execute('INSERT OR IGNORE INTO activities (id, name, upload_id, type, distance, moving_time, average_speed, max_speed, total_elevation_gain, start_date_local, average_cadence) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);', (activities.loc[currentActivity,'id'], activities.loc[currentActivity,'name'], activities.loc[currentActivity,'upload_id'], activities.loc[currentActivity,'type'], activities.loc[currentActivity,'distance'], activities.loc[currentActivity,'moving_time'], activities.loc[currentActivity,'average_speed'], activities.loc[currentActivity,'max_speed'], activities.loc[currentActivity,'total_elevation_gain'], activities.loc[currentActivity,'start_date_local'], activities.loc[currentActivity,'average_cadence']))
+        acitivityName = activities.loc[currentActivity,'name']
+        activityId = activities.loc[currentActivity,'id']
+        print(f'Insert activity id [{activityId}], [{acitivityName}] to database')
+        cur.execute('INSERT OR IGNORE INTO activities (id, name, upload_id, type, distance, moving_time, average_speed, max_speed, total_elevation_gain, start_date_local, average_cadence) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);', (activityId, acitivityName, activities.loc[currentActivity,'upload_id'], activities.loc[currentActivity,'type'], activities.loc[currentActivity,'distance'], activities.loc[currentActivity,'moving_time'], activities.loc[currentActivity,'average_speed'], activities.loc[currentActivity,'max_speed'], activities.loc[currentActivity,'total_elevation_gain'], activities.loc[currentActivity,'start_date_local'], activities.loc[currentActivity,'average_cadence']))
         conn.commit()
+        print(f'[{acitivityName}] done. . .')
     conn.close()
     encryptDatabase()
 
@@ -123,3 +135,12 @@ def setSplits(splits):
         conn.commit()
     conn.close()
     encryptDatabase()
+
+def getActvitiesMissingSplits():
+    decryptDatabase()
+    conn = sqlite3.connect('strava_temp.sqlite')
+    storedActivities = pandas.read_sql_query('SELECT * FROM activities WHERE id NOT IN (SELECT activity_id FROM splits)', conn)
+    conn.commit()
+    conn.close()
+    encryptDatabase()
+    return storedActivities
