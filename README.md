@@ -28,5 +28,18 @@ Copy the code after "&code=" to save for step 4.
 
 Once this has been completed, you can run "getData.py" which uses the tokens to get the data points.  If the access_token has expired, it will use the refresh_token to get a new token.
 
-# Generated Images
+## Generated Content
 ![Running Pace vs Elevation Change](Running_Pace_vs_Elevation_Change.png?raw=true "Pace vs Elevation")
+
+### Predicating Race Times
+This uses the runs you've done in the past and scales to different race distances.  It assumes the race is flat and doesn't takes into account fatigue or weather or surface (lots of stuff. . . it's a bit of fun).
+#### Predicated Race times based on all runs
+Best 5k predicated time: [00:25:42.160]
+Best 10k predicated time: [00:51:24.320]
+Best Half Marathon predicated time: [01:48:27.144]
+Best Marathon predicated time: [03:36:54.288]
+#### Predicated Race times based on last 3 months
+Best 5k predicated time: [00:25:17.756]
+Best 10k predicated time: [00:50:35.512]
+Best Half Marathon predicated time: [01:46:44.172]
+Best Marathon predicated time: [03:33:28.345]

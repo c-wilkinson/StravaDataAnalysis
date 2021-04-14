@@ -9,7 +9,6 @@ def getCoefficientArray(month=0):
     if month > 0:
         splitDate = datetime.date.today() - pandas.offsets.DateOffset(months=month)
         splitDateStr = splitDate.strftime("%Y-%m-%dT%H:%M:%SZ")
-        print(f'Date to look from {splitDate}')
         splits = splits[(splits.activity_date >= splitDateStr)]
     coeff = numpy.polyfit(splits['elevation_difference'], splits['elapsed_time'], 2)
     return coeff
