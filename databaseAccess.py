@@ -157,3 +157,18 @@ def getActvitiesMissingSplits():
     conn.close()
     encryptDatabase()
     return storedActivities
+
+def getSplits():
+    decryptDatabase()
+    conn = sqlite3.connect('strava_temp.sqlite')
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+    cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='splits';")
+    result = cur.fetchone()
+    storedSplits = pandas.DataFrame()
+    if result is not None:
+        storedSplits = pandas.read_sql_query('SELECT * FROM splits', conn)
+    conn.commit()
+    conn.close()
+    encryptDatabase()
+    return storedSplits

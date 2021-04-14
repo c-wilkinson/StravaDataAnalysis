@@ -5,6 +5,8 @@ import time
 from refreshTokens import strava_tokens
 import pandas
 import databaseAccess
+import visualiseData
+import dataPredication
 
 def setSplits(runId, header):
     splitsUrl = activitiesUrl + '/' + str(runId)
@@ -122,3 +124,16 @@ if not splits.empty:
     # Only care about splits that are about 1k
     splits = splits[(splits.distance > 950) & (splits.distance < 1050)]
     databaseAccess.setSplits(splits)
+visualiseData.produceTimeElevation()
+#coeff = dataPredication.getCoefficientArray()
+#print('Predicated Race times based on all runs')
+#print(f'Best 5k predicated time: [{dataPredication.predicateRun(5, coeff)}]')
+#print(f'Best 10k predicated time: [{dataPredication.predicateRun(10, coeff)}]')
+#print(f'Best Half Marathon predicated time: [{dataPredication.predicateRun(21.0975, coeff)}]')
+#print(f'Best Marathon predicated time: [{dataPredication.predicateRun(42.195, coeff)}]')
+#coeff = dataPredication.getCoefficientArray(3)
+#print('Predicated Race times based on last 3 months')
+#print(f'Best 5k predicated time: [{dataPredication.predicateRun(5, coeff)}]')
+#print(f'Best 10k predicated time: [{dataPredication.predicateRun(10, coeff)}]')
+#print(f'Best Half Marathon predicated time: [{dataPredication.predicateRun(21.0975, coeff)}]')
+#print(f'Best Marathon predicated time: [{dataPredication.predicateRun(42.195, coeff)}]')
