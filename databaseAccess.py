@@ -114,7 +114,7 @@ def setActvities(activities):
     cur = conn.cursor()
     cur.execute('CREATE TABLE IF NOT EXISTS activities (id BIGINT, name NVARCHAR, upload_id BIGINT, type VARCHAR, distance NUMERIC, moving_time INT, average_speed NUMERIC, max_speed NUMERIC, total_elevation_gain NUMERIC, start_date_local DATETIME, average_cadence NUMERIC, UNIQUE(id));')
     conn.commit()
-    for currentActivityIndex, currentActivity in activities.iterrows():
+    for _, currentActivity in activities.iterrows():
         acitivityName = currentActivity['name']
         activityId = currentActivity['id']
         print(f'Insert activity id [{activityId}], [{acitivityName}] to database')

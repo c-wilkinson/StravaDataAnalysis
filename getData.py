@@ -55,7 +55,7 @@ while True:
             # If we hit this, we've probably hit the rate limit so let's quit now
             print(activityRequest)
             raise Exception("We've probably hit the rate limit")
-        for currentActivity, row in enumerate(activityRequest):
+        for currentActivity, _ in enumerate(activityRequest):
             runType = activityRequest[currentActivity]['type']
             if runType.lower() == "run":
                 runId = activityRequest[currentActivity]['id']
@@ -113,7 +113,7 @@ if not activities.empty:
 print('Checking for missing splits')
 activitiesMissingSplits = databaseAccess.getActvitiesMissingSplits()
 missingSplits = pandas.DataFrame(columns = splitColumns)
-for index, row in activitiesMissingSplits.iterrows():
+for _, row in activitiesMissingSplits.iterrows():
     runId = row['id']
     splitsDataSet = setSplits(runId, header)
     # Add to split dataset
