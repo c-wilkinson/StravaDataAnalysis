@@ -6,7 +6,7 @@ from refreshTokens import strava_tokens
 import pandas
 import databaseAccess
 
-def setSplits(runId):
+def setSplits(runId, header):
     splitsUrl = activitiesUrl + '/' + str(runId)
     print(f'Getting split information for [{runId}]')
     splitsRequest = requests.get(splitsUrl, headers=header).json()
@@ -14,13 +14,12 @@ def setSplits(runId):
         # If we hit this, we've probably hit the rate limit so let's quit now
         print(splitsRequest)
         raise Exception("We've probably hit the rate limit, execute this again but with less pages")
-    else:
-	    # Otherwise, let's take a look at the splits
-	    splitsDataSet = pandas.DataFrame(splitsRequest['splits_metric'])
-	    splitsDataSet['id'] = runId
-	    splitsDataSet['date'] = splitsRequest['start_date']
-	    splitsDataSet['average_speed'] = splitsDataSet['average_speed']
-	    splitsDataSet['average_grade_adjusted_speed'] = splitsDataSet['average_grade_adjusted_speed']
+    # Otherwise, let's take a look at the splits
+    splitsDataSet = pandas.DataFrame(splitsRequest['splits_metric'])
+    splitsDataSet['id'] = runId
+    splitsDataSet['date'] = splitsRequest['start_date']
+    splitsDataSet['average_speed'] = splitsDataSet['average_speed']
+    splitsDataSet['average_grade_adjusted_speed'] = splitsDataSet['average_grade_adjusted_speed']
     return splitsDataSet
 
 page = 1
@@ -42,11 +41,12 @@ splits = pandas.DataFrame(columns = splitColumns)
 perPage = 50
 # Set the activity index
 index = 0
+# Set request header and parameters
+header = {'Authorization': 'Bearer ' + access_token}
 while True:
     try:
-        header = {'Authorization': 'Bearer ' + access_token}
-        param = {'per_page': perPage, 'page': page, 'after': start_date_unix}
         print(f'Checking for activites on page [{page}]')
+        param = {'per_page': perPage, 'page': page, 'after': start_date_unix}
         activityRequest = requests.get(activitiesUrl, headers=header, params=param).json()
         if (not activityRequest):
             print('No more activities found')
@@ -55,8 +55,7 @@ while True:
             # If we hit this, we've probably hit the rate limit so let's quit now
             print(activityRequest)
             raise Exception("We've probably hit the rate limit")
-            break
-        for currentActivity in range(len(activityRequest)):
+        for currentActivity, row in enumerate(activityRequest):
             runType = activityRequest[currentActivity]['type']
             if runType.lower() == "run":
                 runId = activityRequest[currentActivity]['id']
@@ -77,11 +76,6 @@ while True:
                 else:
                     activities.loc[index,'moving_time'] = 0
                 if 'average_speed' in activityRequest[currentActivity]:
-                    #pace = activityRequest[currentActivity]['average_speed']
-                    #seconds = pace % 1
-                    #pace = pace - seconds
-                    #pace = round(pace)
-                    #seconds = round(seconds * 60)
                     activities.loc[index,'average_speed'] = activityRequest[currentActivity]['average_speed']
                 else:
                     activities.loc[index,'average_speed'] = 0
@@ -98,7 +92,7 @@ while True:
                 else:
                     activities.loc[index,'average_cadence'] = 0
                 index += 1
-                splitsDataSet = setSplits(runId)
+                splitsDataSet = setSplits(runId, header)
                 # Add to split dataset
                 splits = pandas.concat([splits, splitsDataSet])
         # Sleep, since we've now called the API twice we can give it a break for a second
@@ -116,11 +110,14 @@ if not activities.empty:
         splits = splits[(splits.distance > 950) & (splits.distance < 1050)]
         databaseAccess.setSplits(splits)
 # Do we have any activities inserted, where we're missing the splits?
+print('Checking for missing splits')
 activitiesMissingSplits = databaseAccess.getActvitiesMissingSplits()
 missingSplits = pandas.DataFrame(columns = splitColumns)
-for currentActivity in range(len(activitiesMissingSplits)):
-    runId = activitiesMissingSplits.loc[currentActivity,'id']
-    splitsDataSet = setSplits(runId)
+for index, row in activitiesMissingSplits.iterrows():
+    runId = row['id']
+    splitsDataSet = setSplits(runId, header)
+    # Add to split dataset
+    splits = pandas.concat([splits, splitsDataSet])
 if not splits.empty:
     # Only care about splits that are about 1k
     splits = splits[(splits.distance > 950) & (splits.distance < 1050)]
