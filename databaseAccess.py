@@ -172,3 +172,18 @@ def getSplits():
     conn.close()
     encryptDatabase()
     return storedSplits
+
+def getActivityDistances():
+    decryptDatabase()
+    conn = sqlite3.connect('strava_temp.sqlite')
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+    cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='activities';")
+    result = cur.fetchone()
+    activityCount = pandas.DataFrame()
+    if result is not None:
+        activityCount = pandas.read_sql_query("SELECT COUNT(*) AS cnt, CAST(CAST(nearest_5k AS INT)/1000 AS VARCHAR(1000)) || ' < ' || CAST(CAST(nearest_5k + 5000.0 AS INT)/1000 AS VARCHAR(1000)) AS nearest_5k FROM (SELECT id, ROUND(distance/5000,0)*5000 AS nearest_5k FROM activities) a GROUP BY nearest_5k", conn)
+    conn.commit()
+    conn.close()
+    encryptDatabase()
+    return activityCount

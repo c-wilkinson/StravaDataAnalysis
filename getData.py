@@ -117,6 +117,8 @@ def getActivitesAndSplits(header, start_date_unix, perPage = 50):
 
 def generateReadme():
     visualiseData.produceTimeElevation()
+    visualiseData.produceTimeDistance()
+    visualiseData.produceActivtyHistogram()
     if os.path.exists('README.md'):
         os.remove('README.md')
     with open('README.md', 'w') as handle:
@@ -141,6 +143,7 @@ def generateReadme():
         handle.write('## Generated Content\n')
         handle.write('![Running Pace vs Elevation Change](Running_Pace_vs_Elevation_Change.png?raw=true "Pace vs Elevation")\n\n')
         handle.write('![Running Pace vs Total Distance on that run](Running_Pace_vs_Total_Distance.png?raw=true "Pace vs Distance")\n\n')
+        handle.write('![Number of Runs per Distance](Number_of_Runs_per_Distance.png?raw=true "Pace vs Distance")\n\n')
         handle.write('### Predicating Race Times\n')
         handle.write("This uses the runs you've done in the past and scales to different race distances.  It assumes the race is flat and doesn't takes into account fatigue or weather or surface (lots of stuff. . . it's a bit of fun).\n")
         coeff = dataPredication.getCoefficientArray()
