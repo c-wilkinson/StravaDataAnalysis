@@ -11,6 +11,7 @@ def produceTimeElevation():
     matplotlib.pyplot.yticks(fontsize=16)
     matplotlib.pyplot.xlabel('Elevation Change (m)', fontsize=18)
     matplotlib.pyplot.ylabel('1km Pace (sec)', fontsize=18)
+    matplotlib.pyplot.tight_layout()
     matplotlib.pyplot.savefig('Running_Pace_vs_Elevation_Change.png')
 
 def produceTimeDistance():
@@ -22,6 +23,7 @@ def produceTimeDistance():
     matplotlib.pyplot.yticks(fontsize=16)
     matplotlib.pyplot.xlabel('Total Distance (m)', fontsize=18)
     matplotlib.pyplot.ylabel('1km Pace (sec)', fontsize=18)
+    matplotlib.pyplot.tight_layout()
     matplotlib.pyplot.savefig('Running_Pace_vs_Total_Distance.png')
 
 # py -c 'import visualiseData; visualiseData.produceActivtyHistogram()'
