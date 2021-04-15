@@ -167,7 +167,7 @@ def getSplits():
     result = cur.fetchone()
     storedSplits = pandas.DataFrame()
     if result is not None:
-        storedSplits = pandas.read_sql_query('SELECT * FROM splits', conn)
+        storedSplits = pandas.read_sql_query('SELECT s.*, a.total_distance FROM splits s INNER JOIN (SELECT SUM(distance) AS total_distance, id FROM activities GROUP BY id) a ON a.id = s.activity_id', conn)
     conn.commit()
     conn.close()
     encryptDatabase()

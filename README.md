@@ -31,15 +31,17 @@ Once this has been completed, you can run "getData.py" which uses the tokens to 
 ## Generated Content
 ![Running Pace vs Elevation Change](Running_Pace_vs_Elevation_Change.png?raw=true "Pace vs Elevation")
 
+![Running Pace vs Total Distance on that run](Running_Pace_vs_Total_Distance.png?raw=true "Pace vs Distance")
+
 ### Predicating Race Times
 This uses the runs you've done in the past and scales to different race distances.  It assumes the race is flat and doesn't takes into account fatigue or weather or surface (lots of stuff. . . it's a bit of fun).
 #### Predicated Race times based on all runs
-Best 5k predicated time: [00:25:42.160]
-Best 10k predicated time: [00:51:24.320]
-Best Half Marathon predicated time: [01:48:27.144]
-Best Marathon predicated time: [03:36:54.288]
+Best 5k predicated time: 00:25:43.901
+Best 10k predicated time: 00:51:27.803
+Best Half Marathon predicated time: 01:48:34.492
+Best Marathon predicated time: 03:37:08.985
 #### Predicated Race times based on last 3 months
-Best 5k predicated time: [00:25:17.756]
-Best 10k predicated time: [00:50:35.512]
-Best Half Marathon predicated time: [01:46:44.172]
-Best Marathon predicated time: [03:33:28.345]
+Best 5k predicated time: 00:25:22.225
+Best 10k predicated time: 00:50:44.450
+Best Half Marathon predicated time: 01:47:03.029
+Best Marathon predicated time: 03:34:06.058
