@@ -33,6 +33,8 @@ Once this has been completed, you can run "getData.py" which uses the tokens to 
 
 ![Running Pace vs Total Distance on that run](Running_Pace_vs_Total_Distance.png?raw=true "Pace vs Distance")
 
+![Number of Runs per Distance](Number_of_Runs_per_Distance.png?raw=true "Pace vs Distance")
+
 ### Predicating Race Times
 This uses the runs you've done in the past and scales to different race distances.  It assumes the race is flat and doesn't takes into account fatigue or weather or surface (lots of stuff. . . it's a bit of fun).
 #### Predicated Race times based on all runs
