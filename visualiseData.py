@@ -1,6 +1,5 @@
 import numpy
 import pandas
-from scipy import stats
 import dateutil
 import seaborn
 import matplotlib
