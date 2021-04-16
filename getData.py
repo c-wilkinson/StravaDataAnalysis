@@ -144,7 +144,7 @@ def generateReadme():
         handle.write('Once this has been completed, you can run "getData.py" which uses the tokens to get the data points.  If the access_token has expired, it will use the refresh_token to get a new token.\n\n')
         handle.write('## Generated Content\n')
         handle.write('![Running Pace vs Elevation Change](Running_Pace_vs_Elevation_Change.png?raw=true "Pace vs Elevation")\n\n')
-        handle.write('![Time Taken per Distance](Time_Taken_Distance.png.png?raw=true "Time Taken per Distance")\n\n')
+        handle.write('![Time Taken per Distance](Time_Taken_Distance.png?raw=true "Time Taken per Distance")\n\n')
         handle.write('![Running Pace over Time](Running_Pace_over_Time.png?raw=true "Running Pace over Time")\n\n')
         handle.write('![Running Pace vs Total Distance on that run](Running_Pace_vs_Total_Distance.png?raw=true "Pace vs Distance")\n\n')
         handle.write('![Number of Runs per Distance](Number_of_Runs_per_Distance.png?raw=true "Pace vs Distance")\n\n')

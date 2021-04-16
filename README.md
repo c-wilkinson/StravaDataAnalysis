@@ -31,7 +31,7 @@ Once this has been completed, you can run "getData.py" which uses the tokens to 
 ## Generated Content
 ![Running Pace vs Elevation Change](Running_Pace_vs_Elevation_Change.png?raw=true "Pace vs Elevation")
 
-![Time Taken per Distance](Time_Taken_Distance.png.png?raw=true "Time Taken per Distance")
+![Time Taken per Distance](Time_Taken_Distance.png?raw=true "Time Taken per Distance")
 
 ![Running Pace over Time](Running_Pace_over_Time.png?raw=true "Running Pace over Time")
 
