@@ -167,7 +167,22 @@ def getSplits():
     result = cur.fetchone()
     storedSplits = pandas.DataFrame()
     if result is not None:
-        storedSplits = pandas.read_sql_query('SELECT s.*, a.total_distance FROM splits s INNER JOIN (SELECT SUM(distance) AS total_distance, id FROM activities GROUP BY id) a ON a.id = s.activity_id', conn)
+        storedSplits = pandas.read_sql_query('SELECT s.split_id, s.activity_id, s.activity_date, s.average_speed, s.distance, s.elapsed_time, s.elevation_difference, s.moving_time, s.pace_zone, s.split, s.average_grade_adjusted_speed, s.average_heartrate, a.name, a.upload_id, a.type, a.distance AS total_distance, a.moving_time AS total_moving_time, a.average_speed AS total_average_speed, a.max_speed, a.total_elevation_gain, a.start_date_local, a.average_cadence FROM splits s INNER JOIN activities a ON a.id = s.activity_id', conn)
+    conn.commit()
+    conn.close()
+    encryptDatabase()
+    return storedSplits
+
+def getMonthSplits():
+    decryptDatabase()
+    conn = sqlite3.connect('strava_temp.sqlite')
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+    cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='splits';")
+    result = cur.fetchone()
+    storedSplits = pandas.DataFrame()
+    if result is not None:
+        storedSplits = pandas.read_sql_query('SELECT split_id, activity_id, STRFTIME("%Y-%m", activity_date) AS activity_month, activity_date, average_speed, distance, elapsed_time, elevation_difference, moving_time, pace_zone, split, average_grade_adjusted_speed, average_heartrate FROM splits', conn)
     conn.commit()
     conn.close()
     encryptDatabase()

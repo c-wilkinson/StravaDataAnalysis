@@ -31,6 +31,10 @@ Once this has been completed, you can run "getData.py" which uses the tokens to 
 ## Generated Content
 ![Running Pace vs Elevation Change](Running_Pace_vs_Elevation_Change.png?raw=true "Pace vs Elevation")
 
+![Time Taken per Distance](Time_Taken_Distance.png.png?raw=true "Time Taken per Distance")
+
+![Running Pace over Time](Running_Pace_over_Time.png?raw=true "Running Pace over Time")
+
 ![Running Pace vs Total Distance on that run](Running_Pace_vs_Total_Distance.png?raw=true "Pace vs Distance")
 
 ![Number of Runs per Distance](Number_of_Runs_per_Distance.png?raw=true "Pace vs Distance")
@@ -47,10 +51,10 @@ Best Half Marathon predicated time: 01:48:34.492
 Best Marathon predicated time: 03:37:08.985
 
 #### Predicated Race times based on last 3 months
-Best 5k predicated time: 00:25:22.225
+Best 5k predicated time: 00:25:22.525
 
-Best 10k predicated time: 00:50:44.450
+Best 10k predicated time: 00:50:45.050
 
-Best Half Marathon predicated time: 01:47:03.029
+Best Half Marathon predicated time: 01:47:04.295
 
-Best Marathon predicated time: 03:34:06.058
+Best Marathon predicated time: 03:34:08.590
