@@ -1,7 +1,6 @@
 import requests
 from databaseAccess import setConfig
 
-
 copied_code = '[LONGCODEHERE]'
 client_id = '{{ secrets.CLIENTID }}'
 client_secret = '{{ secrets.CLIENTSECRET }}'

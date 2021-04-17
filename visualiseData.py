@@ -18,6 +18,7 @@ def produceTimeElevation():
     matplotlib.pyplot.ylabel('1km Pace (sec)', fontsize=18)
     matplotlib.pyplot.tight_layout()
     matplotlib.pyplot.savefig('Running_Pace_vs_Elevation_Change.png')
+    matplotlib.pyplot.clf()
 
 # py -c 'import visualiseData; visualiseData.produceTimeDistance()'
 def produceTimeDistance():
@@ -31,6 +32,7 @@ def produceTimeDistance():
     matplotlib.pyplot.ylabel('1km Pace (sec)', fontsize=18)
     matplotlib.pyplot.tight_layout()
     matplotlib.pyplot.savefig('Running_Pace_vs_Total_Distance.png')
+    matplotlib.pyplot.clf()
 
 # py -c 'import visualiseData; visualiseData.produceActivtyHistogram()'
 def produceActivtyHistogram():
@@ -43,6 +45,7 @@ def produceActivtyHistogram():
     matplotlib.pyplot.ylabel('Count of Runs', fontsize=18)
     matplotlib.pyplot.tight_layout()
     matplotlib.pyplot.savefig('Number_of_Runs_per_Distance.png')
+    matplotlib.pyplot.clf()
 
 # py -c 'import visualiseData; visualiseData.produceTimePace()'
 def produceTimePace():
@@ -67,6 +70,7 @@ def produceTimePace():
     matplotlib.pyplot.gcf().autofmt_xdate()
     matplotlib.pyplot.tight_layout()
     matplotlib.pyplot.savefig('Running_Pace_over_Time.png')
+    matplotlib.pyplot.clf()
 
 # py -c 'import visualiseData; visualiseData.produceElapsedTimeDistance()'
 def produceElapsedTimeDistance():
@@ -95,3 +99,4 @@ def produceElapsedTimeDistance():
     matplotlib.pyplot.grid()
     matplotlib.pyplot.tight_layout()
     matplotlib.pyplot.savefig('Time_Taken_Distance.png')
+    matplotlib.pyplot.clf()
