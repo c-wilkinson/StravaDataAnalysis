@@ -41,7 +41,7 @@ def getStartData():
     start_date_unix = int(time.mktime(start_date_tuple))
     return start_date_unix
 
-def getActivitesAndSplits(header, start_date_unix, perPage = 50):
+def getActivitesAndSplits(header, start_date_unix, perPage = 25, maxPages = 2):
     # Create activities to append to
     activities = pandas.DataFrame(columns = activityColumns)
     # Create splits to append to
@@ -103,6 +103,9 @@ def getActivitesAndSplits(header, start_date_unix, perPage = 50):
             # Sleep, since we've now called the API twice we can give it a break for a second
             time.sleep(1)
             page += 1
+            if (page > maxPages):
+                print('Finished current max pages, try again in 15 minutes')
+                break
         except:
             caughtException = sys.exc_info()[0]
             print(f'Caught an exception [{caughtException}], attempt to continue')
@@ -134,3 +137,5 @@ if __name__ == '__main__':
         # Only care about splits that are about 1k
         splits = splits[(splits.distance > 950) & (splits.distance < 1050)]
         databaseAccess.setSplits(splits)
+    # Delete activities that have no splits
+    databaseAccess.deleteActvitiesMissingSplits()

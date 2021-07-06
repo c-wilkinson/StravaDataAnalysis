@@ -158,6 +158,20 @@ def getActvitiesMissingSplits():
     encryptDatabase()
     return storedActivities
 
+def deleteActvitiesMissingSplits():
+    decryptDatabase()
+    conn = sqlite3.connect('strava_temp.sqlite')
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+    cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='splits';")
+    result = cur.fetchone()
+    if result is not None:
+        cur = conn.cursor()
+        cur.execute('DELETE FROM activities WHERE id NOT IN (SELECT activity_id FROM splits)')
+    conn.commit()
+    conn.close()
+    encryptDatabase()
+
 def getSplits():
     decryptDatabase()
     conn = sqlite3.connect('strava_temp.sqlite')
