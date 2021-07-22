@@ -22,8 +22,18 @@ jobs:
           pip install matplotlib
           pip install requests
       - name: Get Data
+        env:
+          BUFFERSIZE: ${{ secrets.BUFFERSIZE }}
+          ENCRYPTIONPASSWORD: ${{ secrets.ENCRYPTIONPASSWORD }}
+          CLIENTID: ${{ secrets.CLIENTID }}
+          CLIENTSECRET: ${{ secrets.CLIENTSECRET }}
         run: python getData.py
       - name: Process Data
+        env:
+          BUFFERSIZE: ${{ secrets.BUFFERSIZE }}
+          ENCRYPTIONPASSWORD: ${{ secrets.ENCRYPTIONPASSWORD }}
+          CLIENTID: ${{ secrets.CLIENTID }}
+          CLIENTSECRET: ${{ secrets.CLIENTSECRET }}
         run: python processData.py      
       - name: Upload Changes
         run: |

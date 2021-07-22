@@ -2,8 +2,8 @@ import requests
 import time
 import databaseAccess
 
-client_id = '{{ secrets.CLIENTID }}'
-client_secret = '{{ secrets.CLIENTSECRET }}'
+client_id = $CLIENTID
+client_secret = $CLIENTSECRET
 strava_tokens = databaseAccess.getConfig()
 if strava_tokens['expires_at'] < time.time():
     response = requests.post(

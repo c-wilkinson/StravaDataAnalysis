@@ -2,8 +2,8 @@ import requests
 from databaseAccess import setConfig
 
 copied_code = '[LONGCODEHERE]'
-client_id = '{{ secrets.CLIENTID }}'
-client_secret = '{{ secrets.CLIENTSECRET }}'
+client_id = $BUFFERSIZE
+client_secret = $CLIENTSECRET
 
 response = requests.post(
                     url = 'https://www.strava.com/oauth/token',
