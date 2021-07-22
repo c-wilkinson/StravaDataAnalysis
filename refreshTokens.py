@@ -1,9 +1,10 @@
 import requests
 import time
 import databaseAccess
+import os
 
-client_id = $CLIENTID
-client_secret = $CLIENTSECRET
+client_id = os.environ.get('CLIENTID')
+client_secret = os.environ.get('CLIENTSECRET')
 strava_tokens = databaseAccess.getConfig()
 if strava_tokens['expires_at'] < time.time():
     response = requests.post(

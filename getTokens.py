@@ -1,9 +1,10 @@
 import requests
+import os
 from databaseAccess import setConfig
 
 copied_code = '[LONGCODEHERE]'
-client_id = $BUFFERSIZE
-client_secret = $CLIENTSECRET
+client_id = os.environ.get('BUFFERSIZE')
+client_secret = os.environ.get('CLIENTSECRET')
 
 response = requests.post(
                     url = 'https://www.strava.com/oauth/token',
