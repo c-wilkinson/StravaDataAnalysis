@@ -42,19 +42,19 @@ Once this has been completed, you can run "getData.py" which uses the tokens to 
 ### Predicating Race Times
 This uses the runs you've done in the past and scales to different race distances.  It assumes the race is flat and doesn't takes into account fatigue or weather or surface (lots of stuff. . . it's a bit of fun).
 #### Predicated Race times based on all runs
-Best 5k predicated time: 00:25:45.114
+Best 5k predicated time: 00:25:46.366
 
-Best 10k predicated time: 00:51:30.228
+Best 10k predicated time: 00:51:32.731
 
-Best Half Marathon predicated time: 01:48:39.608
+Best Half Marathon predicated time: 01:48:44.890
 
-Best Marathon predicated time: 03:37:19.216
+Best Marathon predicated time: 03:37:29.780
 
 #### Predicated Race times based on last 3 months
-Best 5k predicated time: 00:25:49.307
+Best 5k predicated time: 00:26:00.105
 
-Best 10k predicated time: 00:51:38.614
+Best 10k predicated time: 00:52:00.211
 
-Best Half Marathon predicated time: 01:48:57.301
+Best Half Marathon predicated time: 01:49:42.865
 
-Best Marathon predicated time: 03:37:54.601
+Best Marathon predicated time: 03:39:25.729
