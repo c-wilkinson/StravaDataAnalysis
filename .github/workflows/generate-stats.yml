@@ -5,7 +5,7 @@ on:
     - cron: '0 0 * * *'
   workflow_dispatch:
 jobs:
-  tweet:
+  Stats:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2

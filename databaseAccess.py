@@ -6,7 +6,7 @@ import pandas
 from os import stat
 
 # Global variables for use by this file
-bufferSize = {{ secrets.BUFFERSIZE }}
+bufferSize = int('{{ secrets.BUFFERSIZE }}')
 password = '{{ secrets.ENCRYPTIONPASSWORD }}'
 
 # py -c 'import databaseAccess; databaseAccess.reset()'
