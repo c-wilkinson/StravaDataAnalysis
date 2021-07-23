@@ -29,6 +29,8 @@ Copy the code after "&code=" to save for step 4.
 Once this has been completed, you can run "getData.py" which uses the tokens to get the data points.  If the access_token has expired, it will use the refresh_token to get a new token.
 
 ## Generated Content
+Last run was 0 years, 0 months, 10 days, 1 hours and 21 minutes ago!
+
 ![Running Pace vs Elevation Change](Running_Pace_vs_Elevation_Change.png?raw=true "Pace vs Elevation")
 
 ![Time Taken per Distance](Time_Taken_Distance.png?raw=true "Time Taken per Distance")
