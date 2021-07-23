@@ -51,10 +51,10 @@ Best Half Marathon predicated time: 01:48:44.890
 Best Marathon predicated time: 03:37:29.780
 
 #### Predicated Race times based on last 3 months
-Best 5k predicated time: 00:26:00.105
+Best 5k predicated time: 00:26:03.565
 
-Best 10k predicated time: 00:52:00.211
+Best 10k predicated time: 00:52:07.130
 
-Best Half Marathon predicated time: 01:49:42.865
+Best Half Marathon predicated time: 01:49:57.463
 
-Best Marathon predicated time: 03:39:25.729
+Best Marathon predicated time: 03:39:54.926
