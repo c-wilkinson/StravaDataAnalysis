@@ -4,6 +4,7 @@ import sqlite3
 import pyAesCrypt
 import pandas
 from os import stat
+from datetime import datetime
 
 # Global variables for use by this file
 bufferSize = int(os.environ.get('BUFFERSIZE'))
@@ -216,3 +217,22 @@ def getActivityDistances():
     conn.close()
     encryptDatabase()
     return activityCount
+
+# py -c 'import databaseAccess; databaseAccess.getLastRun()'	
+def getLastRun():
+    decryptDatabase()
+    conn = sqlite3.connect('strava_temp.sqlite')
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+    cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='activities';")
+    result = cur.fetchone()
+    startDateTime = datetime.strptime('Jan 1 1970', '%b %d %Y')
+    if result is not None:
+        cur = conn.cursor()
+        cur.execute("SELECT start_date_local FROM activities ORDER BY start_date_local DESC LIMIT 1;")
+        row = cur.fetchone()
+        startDateTime = datetime.strptime(row[0], "%Y-%m-%dT%H:%M:%SZ")
+    conn.commit()
+    conn.close()
+    encryptDatabase()
+    return startDateTime

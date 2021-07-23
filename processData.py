@@ -1,13 +1,19 @@
 import visualiseData
 import os
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
 import dataPredication
+import databaseAccess
 
+# py -c 'import processData; processData.generateReadme()'
 def generateReadme():
     visualiseData.produceTimeElevation()
     visualiseData.produceTimeDistance()
     visualiseData.produceActivtyHistogram()
     visualiseData.produceElapsedTimeDistance()
     visualiseData.produceTimePace()
+    lastRun = databaseAccess.getLastRun()
+    delta = relativedelta(datetime.now(), lastRun)
     if os.path.exists('README.md'):
         os.remove('README.md')
     with open('README.md', 'w') as handle:
@@ -30,6 +36,7 @@ def generateReadme():
         handle.write('6.Open "refreshTokens.py", add the client_id from your Application on Strava to the client_id variable.  Add the client_secret from your Application on Strava to the client_secret variable.  Save the changes.\n\n')
         handle.write('Once this has been completed, you can run "getData.py" which uses the tokens to get the data points.  If the access_token has expired, it will use the refresh_token to get a new token.\n\n')
         handle.write('## Generated Content\n')
+        handle.write('Last run was {0} years, {1} months, {2} days, {3} hours and {4} minutes ago!\n\n'.format(delta.years, delta.months, delta.days, delta.hours, delta.minutes))
         handle.write('![Running Pace vs Elevation Change](Running_Pace_vs_Elevation_Change.png?raw=true "Pace vs Elevation")\n\n')
         handle.write('![Time Taken per Distance](Time_Taken_Distance.png?raw=true "Time Taken per Distance")\n\n')
         handle.write('![Running Pace over Time](Running_Pace_over_Time.png?raw=true "Running Pace over Time")\n\n')
