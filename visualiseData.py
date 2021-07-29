@@ -1,6 +1,7 @@
 import numpy
 import pandas
 import dateutil
+import datetime
 import seaborn
 import matplotlib
 import matplotlib.pylab
@@ -9,28 +10,38 @@ import databaseAccess
 # py -c 'import visualiseData; visualiseData.produceTimeElevation()'
 def produceTimeElevation():
     splits = databaseAccess.getSplits()
-    matplotlib.pyplot.plot( 'elevation_difference', 'elapsed_time', data=splits, linestyle='', marker='o', markersize=5, alpha=0.1, color="blue")
-    seaborn.regplot(x = 'elevation_difference', y = 'elapsed_time', scatter=None, data = splits ,order = 2)
+    base = datetime.datetime(1970, 1, 1, 0, 0, 0)
+    times = [base + datetime.timedelta(seconds=x) for x in splits['elapsed_time']]
+    y = matplotlib.dates.date2num(times)
+    matplotlib.pyplot.plot( splits['elevation_difference'], y, linestyle='', marker='o', markersize=5, alpha=0.1, color="blue")
+    seaborn.regplot(x = splits['elevation_difference'], y = y, scatter=None, order = 2)
     matplotlib.pyplot.title('Running Pace vs. Elevation Change', fontsize=18, fontweight="bold")
     matplotlib.pyplot.xticks(fontsize=16)
     matplotlib.pyplot.yticks(fontsize=16)
     matplotlib.pyplot.xlabel('Elevation Change (m)', fontsize=18)
-    matplotlib.pyplot.ylabel('1km Pace (sec)', fontsize=18)
+    matplotlib.pyplot.ylabel('1km Pace (hh:mm:ss)', fontsize=18)
     matplotlib.pyplot.tight_layout()
+    matplotlib.pyplot.gca().yaxis.set_major_formatter(matplotlib.dates.DateFormatter('%H:%M:%S'))
+    matplotlib.pyplot.gcf().autofmt_xdate()
     matplotlib.pyplot.savefig('Running_Pace_vs_Elevation_Change.png')
     matplotlib.pyplot.clf()
 
 # py -c 'import visualiseData; visualiseData.produceTimeDistance()'
 def produceTimeDistance():
     splits = databaseAccess.getSplits()
-    matplotlib.pyplot.plot( 'total_distance', 'elapsed_time', data=splits, linestyle='', marker='o', markersize=5, alpha=0.1, color="blue")
-    seaborn.regplot(x = 'total_distance', y = 'elapsed_time', scatter=None, data = splits ,order = 2)
+    base = datetime.datetime(1970, 1, 1, 0, 0, 0)
+    times = [base + datetime.timedelta(seconds=x) for x in splits['elapsed_time']]
+    y = matplotlib.dates.date2num(times)
+    matplotlib.pyplot.plot( splits['total_distance'], y, linestyle='', marker='o', markersize=5, alpha=0.1, color="blue")
+    seaborn.regplot(x = splits['total_distance'], y = y, scatter=None, order = 2)
     matplotlib.pyplot.title('Running Pace vs. Total Distance', fontsize=18, fontweight="bold")
     matplotlib.pyplot.xticks(fontsize=16)
     matplotlib.pyplot.yticks(fontsize=16)
     matplotlib.pyplot.xlabel('Total Distance (m)', fontsize=18)
-    matplotlib.pyplot.ylabel('1km Pace (sec)', fontsize=18)
+    matplotlib.pyplot.ylabel('1km Pace (hh:mm:ss)', fontsize=18)
     matplotlib.pyplot.tight_layout()
+    matplotlib.pyplot.gca().yaxis.set_major_formatter(matplotlib.dates.DateFormatter('%H:%M:%S'))
+    matplotlib.pyplot.gcf().autofmt_xdate()
     matplotlib.pyplot.savefig('Running_Pace_vs_Total_Distance.png')
     matplotlib.pyplot.clf()
 
@@ -52,20 +63,20 @@ def produceTimePace():
     splits = databaseAccess.getMonthSplits()
     dates = [dateutil.parser.parse(x) for x in splits['activity_month']]
     x = matplotlib.dates.date2num(dates)
-    y = splits['elapsed_time']
-    matplotlib.pylab.plot(x, y, linestyle='', marker='o', markersize=5, alpha=0.1, color="blue")
+    base = datetime.datetime(1970, 1, 1, 0, 0, 0)
+    times = [base + datetime.timedelta(seconds=x) for x in splits['elapsed_time']]
+    y = matplotlib.dates.date2num(times)
+    matplotlib.pylab.plot_date(x, y, linestyle='', marker='o', markersize=5, alpha=0.1, color="blue")
     matplotlib.pyplot.title('Running Pace over Time', fontsize=18, fontweight="bold")
     matplotlib.pyplot.xticks(fontsize=16, rotation='vertical')
     matplotlib.pyplot.yticks(fontsize=16)
     matplotlib.pyplot.xlabel('Date', fontsize=18)
-    matplotlib.pyplot.ylabel('1km Pace (sec)', fontsize=18)
+    matplotlib.pyplot.ylabel('Pace (km / hh:mm:ss)', fontsize=18)
     matplotlib.pyplot.tight_layout()
-    z = numpy.polyfit(x, y, 1)
-    p = numpy.poly1d(z)
-    polyX = numpy.linspace(x.min(), x.max(), 100)
-    matplotlib.pylab.plot(polyX,p(polyX),"r")
+    seaborn.regplot(x = x, y = y, scatter=None, data = splits ,order = 2)
     loc= matplotlib.dates.AutoDateLocator()
     matplotlib.pyplot.gca().xaxis.set_major_locator(loc)
+    matplotlib.pyplot.gca().yaxis.set_major_formatter(matplotlib.dates.DateFormatter('%H:%M:%S'))
     matplotlib.pyplot.gca().xaxis.set_major_formatter(matplotlib.dates.AutoDateFormatter(loc))
     matplotlib.pyplot.gcf().autofmt_xdate()
     matplotlib.pyplot.tight_layout()
@@ -77,26 +88,31 @@ def produceElapsedTimeDistance():
     splits = databaseAccess.getSplits()
     splits = pandas.merge(splits, splits.groupby(['activity_id'])[['elapsed_time']].agg('sum'), on=["activity_id", "activity_id"])
     splits['total_distance'] = splits['total_distance'] / 1000
+    base = datetime.datetime(1970, 1, 1, 0, 0, 0)
+    times = [base + datetime.timedelta(seconds=x) for x in splits['elapsed_time_y']]
+    y = matplotlib.dates.date2num(times)
     max_distance = int(round(splits['total_distance'].max()))
-    max_time = int(round(splits['elapsed_time_y'].max()))
+    max_time = max(times)
     if max_distance < 42.195:
         # Assume we want to extend for a marathon
         max_distance = 42.195
         # Since we haven't run that far, assume we can finish a marathon in under 5 hours
-        max_time = 18000
+        max_time = datetime.datetime(1970, 1, 1, 5, 0, 0)
     _, axes = matplotlib.pyplot.subplots()
     xlim = [0,max_distance]
     axes.set_xlim(xlim)
     ylim = [0,max_time]
     axes.set_ylim(ylim)
-    matplotlib.pyplot.plot( 'total_distance', 'elapsed_time_y', data=splits, linestyle='', marker='o', markersize=5, alpha=0.1, color="blue")
-    seaborn.regplot(x = 'total_distance', y = 'elapsed_time_y', scatter=None, data = splits ,order = 2, ax = axes, truncate = False)
+    matplotlib.pyplot.plot( splits['total_distance'], y, linestyle='', marker='o', markersize=5, alpha=0.1, color="blue")
+    seaborn.regplot(x = splits['total_distance'], y = y, scatter=None, data = splits ,order = 2, ax = axes, truncate = False)
     matplotlib.pyplot.title('Time Taken Over Distances', fontsize=18, fontweight="bold")
     matplotlib.pyplot.xticks(fontsize=16)
     matplotlib.pyplot.yticks(fontsize=16)
     matplotlib.pyplot.xlabel('Total Distance (km)', fontsize=18)
-    matplotlib.pyplot.ylabel('Time Taken (sec)', fontsize=18)
+    matplotlib.pyplot.ylabel('Time Taken (hh:mm:ss)', fontsize=18)
     matplotlib.pyplot.grid()
+    matplotlib.pyplot.gca().yaxis.set_major_formatter(matplotlib.dates.DateFormatter('%H:%M:%S'))
+    matplotlib.pyplot.gcf().autofmt_xdate()
     matplotlib.pyplot.tight_layout()
     matplotlib.pyplot.savefig('Time_Taken_Distance.png')
     matplotlib.pyplot.clf()
