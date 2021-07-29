@@ -1,4 +1,3 @@
-import numpy
 import pandas
 import dateutil
 import datetime
