@@ -1,5 +1,10 @@
 name: Python Pull Request Workflow
-on: [pull_request]
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
 jobs:
 
   qa:
