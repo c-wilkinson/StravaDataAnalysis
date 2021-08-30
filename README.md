@@ -29,7 +29,7 @@ Copy the code after "&code=" to save for step 4.
 Once this has been completed, you can run "getData.py" which uses the tokens to get the data points.  If the access_token has expired, it will use the refresh_token to get a new token.
 
 ## Generated Content
-Last run was 0 years, 0 months, 2 days, 9 hours and 52 minutes ago!
+Last run was 0 years, 0 months, 2 days, 11 hours and 15 minutes ago!
 
 ![Running Pace vs Elevation Change](Running_Pace_vs_Elevation_Change.png?raw=true "Pace vs Elevation")
 
@@ -53,10 +53,10 @@ Best Half Marathon predicated time: 01:49:47.272
 Best Marathon predicated time: 03:39:34.544
 
 #### Predicated Race times based on last 3 months
-Best 5k predicated time: 00:26:43.110
+Best 5k predicated time: 00:26:36.826
 
-Best 10k predicated time: 00:53:26.221
+Best 10k predicated time: 00:53:13.651
 
-Best Half Marathon predicated time: 01:52:44.324
+Best Half Marathon predicated time: 01:52:17.805
 
-Best Marathon predicated time: 03:45:28.648
+Best Marathon predicated time: 03:44:35.610
