@@ -29,7 +29,7 @@ Copy the code after "&code=" to save for step 4.
 Once this has been completed, you can run "getData.py" which uses the tokens to get the data points.  If the access_token has expired, it will use the refresh_token to get a new token.
 
 ## Generated Content
-Last run was 0 years, 0 months, 1 days, 20 hours and 12 minutes ago!
+Last run was 0 years, 0 months, 0 days, 0 hours and -6 minutes ago!
 
 ![Running Pace vs Elevation Change](Running_Pace_vs_Elevation_Change.png?raw=true "Pace vs Elevation")
 
@@ -44,19 +44,19 @@ Last run was 0 years, 0 months, 1 days, 20 hours and 12 minutes ago!
 ### Predicating Race Times
 This uses the runs you've done in the past and scales to different race distances.  It assumes the race is flat and doesn't takes into account fatigue or weather or surface (lots of stuff. . . it's a bit of fun).
 #### Predicated Race times based on all runs
-Best 5k predicated time: 00:26:06.546
+Best 5k predicated time: 00:26:07.031
 
-Best 10k predicated time: 00:52:13.093
+Best 10k predicated time: 00:52:14.062
 
-Best Half Marathon predicated time: 01:50:10.043
+Best Half Marathon predicated time: 01:50:12.088
 
-Best Marathon predicated time: 03:40:20.086
+Best Marathon predicated time: 03:40:24.175
 
 #### Predicated Race times based on last 3 months
-Best 5k predicated time: 00:26:47.821
+Best 5k predicated time: 00:26:49.002
 
-Best 10k predicated time: 00:53:35.642
+Best 10k predicated time: 00:53:38.004
 
-Best Half Marathon predicated time: 01:53:04.200
+Best Half Marathon predicated time: 01:53:09.184
 
-Best Marathon predicated time: 03:46:08.401
+Best Marathon predicated time: 03:46:18.369
