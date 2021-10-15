@@ -1,23 +1,13 @@
-import numpy
-import functools
-import datetime
-import databaseAccess
-import pandas
+import math
 
-def getCoefficientArray(month=0):
-    splits = databaseAccess.getSplits()
-    if month > 0:
-        splitDate = datetime.date.today() - pandas.offsets.DateOffset(months=month)
-        splitDateStr = splitDate.strftime("%Y-%m-%dT%H:%M:%SZ")
-        splits = splits[(splits.activity_date >= splitDateStr)]
-    coeff = numpy.polyfit(splits['elevation_difference'], splits['elapsed_time'], 2)
-    return coeff
+# py -c 'import dataPredication; dataPredication.getVDOT(1000, 255.0)'
+def getVDOT(distance, time):
+    # Swap time to minutes
+    time = time / 60.0
+    velocity = distance / time
+    o2cost = 0.182258 * velocity + 0.000104 * velocity**2 - 4.60
+    # This is the profile of an elite athlete, which I am not
+    dropdead = 0.2989558 * math.exp(-0.1932605 * time) + 0.1894393 * math.exp(-0.012778 * time) + 0.8
+    VDOT = o2cost / dropdead
+    print(VDOT)
 
-def predicateRun(distance, coeff):
-    # Predicts time on a completely flat track
-    time = coeff[0]**2+coeff[1]+ coeff[2]
-    # Multiply time by distance
-    time = time * distance
-    # Change time to minutes
-    predicatedTime = "%02d:%02d:%02d.%03d" % functools.reduce(lambda ll,b : divmod(ll[0],b) + ll[1:],[(round(time*1000),),1000,60,60])
-    return predicatedTime

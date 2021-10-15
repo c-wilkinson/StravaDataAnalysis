@@ -6,6 +6,47 @@ import matplotlib
 import matplotlib.pylab
 import databaseAccess
 
+# py -c 'import visualiseData; visualiseData.getFastestTimes()'
+def getFastestTimes():
+    splits = databaseAccess.getSplits()
+    activities = splits[['activity_date', 'distance', 'elapsed_time']]
+    produceFastest1k(activities)
+    months=[]
+    max_date = datetime.datetime.strptime((datetime.datetime.strptime(splits['activity_date'].max(),"%Y-%m-%dT%H:%M:%SZ")).strftime('%Y%m'),'%Y%m')
+    min_date = datetime.datetime.strptime((datetime.datetime.strptime(splits['activity_date'].min(),"%Y-%m-%dT%H:%M:%SZ")).strftime('%Y%m'),'%Y%m')
+    months.append(min_date)
+    while min_date <= max_date:
+        min_date = min_date + dateutil.relativedelta.relativedelta(months=1)
+        months.append(min_date)
+
+def produceFastest1k(activities):
+    pandas.options.mode.chained_assignment = None
+    activities['activity_date'] = [datetime.datetime.strptime((datetime.datetime.strptime(x,"%Y-%m-%dT%H:%M:%SZ")).strftime('%Y%m'),'%Y%m') for x in activities['activity_date']]
+    activities['distance'] = activities['distance'].astype(float)
+    activities['elapsed_time'] = activities['elapsed_time'].astype(float)
+    activities.set_index(['activity_date'], inplace=True)
+    fastestSplits = activities['elapsed_time'].groupby('activity_date').agg(elapsed_time=('min')).reset_index()
+    base = datetime.datetime(1970, 1, 1, 0, 0, 0)
+    times = [base + datetime.timedelta(seconds=x) for x in fastestSplits['elapsed_time']]
+    dates = fastestSplits['activity_date']
+    x = matplotlib.dates.date2num(dates)
+    y = matplotlib.dates.date2num(times)
+    matplotlib.pylab.plot_date(x, y, linestyle='', marker='o', markersize=5, alpha=0.1, color="blue")
+    matplotlib.pyplot.title('Fastest 1k Pace over Time', fontsize=18, fontweight="bold")
+    matplotlib.pyplot.xticks(fontsize=16, rotation='vertical')
+    matplotlib.pyplot.yticks(fontsize=16)
+    matplotlib.pyplot.xlabel('Month', fontsize=18)
+    matplotlib.pyplot.ylabel('Pace (km / hh:mm:ss)', fontsize=18)
+    seaborn.regplot(x = x, y = y, scatter=None, data = fastestSplits ,order = 2)
+    loc= matplotlib.dates.AutoDateLocator()
+    matplotlib.pyplot.gca().xaxis.set_major_locator(loc)
+    matplotlib.pyplot.gca().yaxis.set_major_formatter(matplotlib.dates.DateFormatter('%H:%M:%S'))
+    matplotlib.pyplot.gca().xaxis.set_major_formatter(matplotlib.dates.AutoDateFormatter(loc))
+    matplotlib.pyplot.gcf().autofmt_xdate()
+    matplotlib.pyplot.tight_layout()
+    matplotlib.pyplot.savefig('Fastest_1k_Pace_over_Time.png')
+    matplotlib.pyplot.clf()
+
 # py -c 'import visualiseData; visualiseData.produceTimeElevation()'
 def produceTimeElevation():
     splits = databaseAccess.getSplits()
@@ -101,7 +142,7 @@ def produceElapsedTimeDistance():
     axes.set_xlim(xlim)
     ylim = [0,max_time]
     axes.set_ylim(ylim)
-    matplotlib.pyplot.plot( splits['total_distance'], y, linestyle='', marker='o', markersize=5, alpha=0.1, color="blue")
+    matplotlib.pyplot.plot( splits['total_distance'], y, linestyle='', marker='o', markersize=2, alpha=0.1, color="blue")
     seaborn.regplot(x = splits['total_distance'], y = y, scatter=None, data = splits ,order = 2, ax = axes, truncate = False)
     matplotlib.pyplot.title('Time Taken Over Distances', fontsize=18, fontweight="bold")
     matplotlib.pyplot.xticks(fontsize=16)
