@@ -3,7 +3,7 @@ Simple data extract from the Strava API to generate some data points I'm interes
 
 [![License: Unlicense](https://img.shields.io/badge/license-Unlicense-blue.svg)](http://unlicense.org/)
 [![CodeFactor](https://www.codefactor.io/repository/github/c-wilkinson/stravadataanalysis/badge)](https://www.codefactor.io/repository/github/c-wilkinson/stravadataanalysis)
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/baba43376e964984a52a9a12f7209ace)](https://www.codacy.com/gh/c-wilkinson/StravaDataAnalysis/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=c-wilkinson/StravaDataAnalysis&amp;utm_campaign=Badge_Grade)[![GenerateStats](https://github.com/c-wilkinson/StravaDataAnalysis/actions/workflows/generate-stats.yml/badge.svg)](https://github.com/c-wilkinson/StravaDataAnalysis/actions/workflows/generate-stats.yml)[![CodeQL](https://github.com/c-wilkinson/StravaDataAnalysis/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/c-wilkinson/StravaDataAnalysis/actions/workflows/codeql-analysis.yml)[![Python Pull Request Workflow](https://github.com/c-wilkinson/StravaDataAnalysis/actions/workflows/workflow-pr.yaml/badge.svg)](https://github.com/c-wilkinson/StravaDataAnalysis/actions/workflows/workflow-pr.yaml)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/baba43376e964984a52a9a12f7209ace)](https://www.codacy.com/gh/c-wilkinson/StravaDataAnalysis/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=c-wilkinson/StravaDataAnalysis&amp;utm_campaign=Badge_Grade)[![GenerateStats](https://github.com/c-wilkinson/StravaDataAnalysis/actions/workflows/generate-stats.yml/badge.svg)](https://github.com/c-wilkinson/StravaDataAnalysis/actions/workflows/generate-stats.yml)[![CodeQL](https://github.com/c-wilkinson/StravaDataAnalysis/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/c-wilkinson/StravaDataAnalysis/actions/workflows/codeql-analysis.yml)
 
 As I'm sure is obvious, I'm teaching myself python as I go so the code quality is not likely to be great.  Do with it as you wish.
 
@@ -29,7 +29,7 @@ Copy the code after "&code=" to save for step 4.
 Once this has been completed, you can run "getData.py" which uses the tokens to get the data points.  If the access_token has expired, it will use the refresh_token to get a new token.
 
 ## Generated Content
-Last run was 0 years, 0 months, 1 days, 4 hours and 35 minutes ago!
+Last run was 0 years, 0 months, 2 days, 5 hours and 3 minutes ago!
 
 ![Running Pace vs Elevation Change](Running_Pace_vs_Elevation_Change.png?raw=true "Pace vs Elevation")
 
@@ -44,19 +44,19 @@ Last run was 0 years, 0 months, 1 days, 4 hours and 35 minutes ago!
 ### Predicating Race Times
 This uses the runs you've done in the past and scales to different race distances.  It assumes the race is flat and doesn't takes into account fatigue or weather or surface (lots of stuff. . . it's a bit of fun).
 #### Predicated Race times based on all runs
-Best 5k predicated time: 00:25:50.912
+Best 5k predicated time: 00:26:33.938
 
-Best 10k predicated time: 00:51:41.824
+Best 10k predicated time: 00:53:07.875
 
-Best Half Marathon predicated time: 01:49:04.072
+Best Half Marathon predicated time: 01:52:05.619
 
-Best Marathon predicated time: 03:38:08.145
+Best Marathon predicated time: 03:44:11.239
 
 #### Predicated Race times based on last 3 months
-Best 5k predicated time: 00:26:20.514
+Best 5k predicated time: 00:28:27.485
 
-Best 10k predicated time: 00:52:41.028
+Best 10k predicated time: 00:56:54.970
 
-Best Half Marathon predicated time: 01:51:08.978
+Best Half Marathon predicated time: 02:00:04.733
 
-Best Marathon predicated time: 03:42:17.956
+Best Marathon predicated time: 04:00:09.466
