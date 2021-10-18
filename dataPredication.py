@@ -22,11 +22,25 @@ def getPaceRange(vdot):
     paceRange = {}
     for intensityType in INTENSITY_DICTIONARY:
         intensityRange = INTENSITY_DICTIONARY[intensityType]
-        range = []
+        currentRange = []
         for intensity in intensityRange:
             intensityVdot = vdot * intensity
             minutesPerKM = (1 / ((29.54 + 5.000663 * intensityVdot - 0.007546 * intensityVdot**2) / 1609.34)) / 1.60934
             time = str(datetime.timedelta(minutes=minutesPerKM))
-            range.append(time)
-        paceRange[intensityType] = range
+            currentRange.append(time)
+        paceRange[intensityType] = currentRange
     return paceRange
+
+# py -c 'import dataPredication; dataPredication.getStandardRiegelPredictions(5000, 1440);'
+def getStandardRiegelPredictions(distance, time):
+    DISTANCES_LIST = [100, 200, 500, 1000, 1609.34, 5000, 10000, 21097.5, 42195]
+    predicatedTimes = {}
+    for specificDistance in DISTANCES_LIST:
+        newTime = getRiegelPrediction(distance, time, specificDistance)
+        predicatedTimes[specificDistance] = str(datetime.timedelta(seconds=newTime))
+    return predicatedTimes
+         
+# py -c 'import dataPredication; dataPredication.getRiegelPrediction(5000, 1440, 10000);'
+def getRiegelPrediction(distanceRun, timeTaken, distanceTarget):
+    # Peter Riegel's formula T2=T1×(D2÷D1)1.06
+    return timeTaken * (distanceTarget / distanceRun)**1.06
