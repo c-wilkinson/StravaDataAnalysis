@@ -39,7 +39,7 @@ def getStandardRiegelPredictions(distance, time):
         newTime = getRiegelPrediction(distance, time, specificDistance)
         predicatedTimes[specificDistance] = str(datetime.timedelta(seconds=newTime))
     return predicatedTimes
-         
+
 # py -c 'import dataPredication; dataPredication.getRiegelPrediction(5000, 1440, 10000);'
 def getRiegelPrediction(distanceRun, timeTaken, distanceTarget):
     # Peter Riegel's formula T2=T1×(D2÷D1)1.06
