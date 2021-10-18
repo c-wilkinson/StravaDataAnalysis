@@ -22,13 +22,13 @@ def getPaceRange(vdot):
     paceRange = {}
     for intensityType in INTENSITY_DICTIONARY:
         intensityRange = INTENSITY_DICTIONARY[intensityType]
-        range = []
+        currentRange = []
         for intensity in intensityRange:
             intensityVdot = vdot * intensity
             minutesPerKM = (1 / ((29.54 + 5.000663 * intensityVdot - 0.007546 * intensityVdot**2) / 1609.34)) / 1.60934
             time = str(datetime.timedelta(minutes=minutesPerKM))
-            range.append(time)
-        paceRange[intensityType] = range
+            currentRange.append(time)
+        paceRange[intensityType] = currentRange
     return paceRange
 
 # py -c 'import dataPredication; dataPredication.getStandardRiegelPredictions(5000, 1440);'

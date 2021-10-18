@@ -34,7 +34,7 @@ jobs:
           ENCRYPTIONPASSWORD: ${{ secrets.ENCRYPTIONPASSWORD }}
           CLIENTID: ${{ secrets.CLIENTID }}
           CLIENTSECRET: ${{ secrets.CLIENTSECRET }}
-        run: python processData.py      
+        run: python processData.py
       - name: Upload Changes
         run: |
           git config --global user.name 'GithubBot'

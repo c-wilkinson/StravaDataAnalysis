@@ -2,7 +2,8 @@ import visualiseData
 import os
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
-import dataPredication
+# Commenting out for now as we're not using the new version of this yet
+# import dataPredication
 import databaseAccess
 
 # py -c 'import processData; processData.generateReadme()'

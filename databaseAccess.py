@@ -218,7 +218,7 @@ def getActivityDistances():
     encryptDatabase()
     return activityCount
 
-# py -c 'import databaseAccess; databaseAccess.getLastRun()'	
+# py -c 'import databaseAccess; databaseAccess.getLastRun()'
 def getLastRun():
     decryptDatabase()
     conn = sqlite3.connect('strava_temp.sqlite')
