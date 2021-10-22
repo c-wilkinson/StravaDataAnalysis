@@ -36,6 +36,7 @@ jobs:
           CLIENTSECRET: ${{ secrets.CLIENTSECRET }}
         run: python processData.py
       - name: Upload Changes
+        if: always()
         run: |
           git config --global user.name 'GithubBot'
           git remote set-url origin https://x-access-token:${{ secrets.TOKEN_GITHUB }}@github.com/${{ github.repository }}
