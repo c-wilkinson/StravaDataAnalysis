@@ -3,7 +3,7 @@ import os
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 # Commenting out for now as we're not using the new version of this yet
-# import dataPredication
+# import dataPrediction
 import databaseAccess
 
 # py -c 'import processData; processData.generateReadme()'
