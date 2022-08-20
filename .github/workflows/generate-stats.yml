@@ -29,14 +29,22 @@ jobs:
           ENCRYPTIONPASSWORD: ${{ secrets.ENCRYPTIONPASSWORD }}
           CLIENTID: ${{ secrets.CLIENTID }}
           CLIENTSECRET: ${{ secrets.CLIENTSECRET }}
-        run: python getData.py
+        uses: nick-invision/retry@v2
+        with:
+              timeout_minutes: 5
+              max_attempts: 3        
+              command: python getData.py
       - name: Process Data
         env:
           BUFFERSIZE: ${{ secrets.BUFFERSIZE }}
           ENCRYPTIONPASSWORD: ${{ secrets.ENCRYPTIONPASSWORD }}
           CLIENTID: ${{ secrets.CLIENTID }}
           CLIENTSECRET: ${{ secrets.CLIENTSECRET }}
-        run: python processData.py
+        uses: nick-invision/retry@v2
+        with:
+              timeout_minutes: 5
+              max_attempts: 3        
+              command: python processData.py
       - name: Upload Changes
         if: always()
         run: |
