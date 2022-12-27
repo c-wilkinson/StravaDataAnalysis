@@ -125,12 +125,6 @@ def produceTimePace():
 # py -c 'import visualiseData; visualiseData.produceElapsedTimeDistance()'
 def produceElapsedTimeDistance():
     splits = databaseAccess.getSplits()
-    lastRun = databaseAccess.getLastRun()
-    splits["activity_date_dt"] =  pandas.to_datetime(splits["activity_date"], format="%Y/%m/%d").dt.date
-    mask = splits['activity_date_dt'] == lastRun.date()
-    lastRunSplits = splits.loc[mask]
-    lastRunSplits = pandas.merge(lastRunSplits, lastRunSplits.groupby(['activity_id'])[['elapsed_time']].agg('sum'), on=["activity_id", "activity_id"])
-    lastRunSplits['total_distance'] = lastRunSplits['total_distance'] / 1000
     splits = pandas.merge(splits, splits.groupby(['activity_id'])[['elapsed_time']].agg('sum'), on=["activity_id", "activity_id"])
     splits['total_distance'] = splits['total_distance'] / 1000
     base = datetime.datetime(1970, 1, 1, 0, 0, 0)
@@ -150,9 +144,6 @@ def produceElapsedTimeDistance():
     axes.set_ylim(ylim)
     matplotlib.pyplot.plot( splits['total_distance'], y, linestyle='', marker='o', markersize=2, alpha=0.1, color="blue")
     seaborn.regplot(x = splits['total_distance'], y = y, scatter=None, data = splits ,order = 2, ax = axes, truncate = False)
-    times = [base + datetime.timedelta(seconds=x) for x in lastRunSplits['elapsed_time_y']]
-    y = matplotlib.dates.date2num(times)
-    matplotlib.pyplot.plot( lastRunSplits['total_distance'], y, linestyle='', marker='x', markersize=8, alpha=1, color="red")
     matplotlib.pyplot.title('Time Taken Over Distances', fontsize=18, fontweight="bold")
     matplotlib.pyplot.xticks(fontsize=16)
     matplotlib.pyplot.yticks(fontsize=16)
