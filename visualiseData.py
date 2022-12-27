@@ -19,7 +19,6 @@ def getFastestTimes():
         min_date = min_date + dateutil.relativedelta.relativedelta(months=1)
         months.append(min_date)
 
-# py -c 'import visualiseData; import databaseAccess; splits = databaseAccess.getSplits();  activities = splits[['activity_date', 'distance', 'elapsed_time']]; visualiseData.produceFastest1k();'
 def produceFastest1k(activities):
     pandas.options.mode.chained_assignment = None
     activities['activity_date'] = [datetime.datetime.strptime((datetime.datetime.strptime(x,"%Y-%m-%dT%H:%M:%SZ")).strftime('%Y%m'),'%Y%m') for x in activities['activity_date']]
@@ -73,8 +72,6 @@ def produceTimeDistance():
     base = datetime.datetime(1970, 1, 1, 0, 0, 0)
     times = [base + datetime.timedelta(seconds=x) for x in splits['elapsed_time']]
     y = matplotlib.dates.date2num(times)
-    seaborn.set_theme()
-    seaborn.set(style="darkgrid", context="poster")
     matplotlib.pyplot.plot( splits['total_distance'], y, linestyle='', marker='o', markersize=5, alpha=0.1, color="blue")
     seaborn.regplot(x = splits['total_distance'], y = y, scatter=None, order = 2)
     matplotlib.pyplot.title('Running Pace vs. Total Distance', fontsize=18, fontweight="bold")
@@ -85,24 +82,20 @@ def produceTimeDistance():
     matplotlib.pyplot.gca().yaxis.set_major_formatter(matplotlib.dates.DateFormatter('%H:%M:%S'))
     matplotlib.pyplot.gcf().autofmt_xdate()
     matplotlib.pyplot.tight_layout()
-    matplotlib.pyplot.gcf().set_size_inches(8,6)
-    matplotlib.pyplot.savefig('Running_Pace_vs_Total_Distance.png',dpi=300)
+    matplotlib.pyplot.savefig('Running_Pace_vs_Total_Distance.png')
     matplotlib.pyplot.clf()
 
 # py -c 'import visualiseData; visualiseData.produceActivtyHistogram()'
 def produceActivtyHistogram():
     activities = databaseAccess.getActivityDistances()
-    seaborn.set_theme()
-    seaborn.set(style="darkgrid", context="poster")
-    seaborn.catplot(x="nearest_5miles", y="cnt",  data=activities, kind = "bar")
-    matplotlib.pyplot.title('Number of Activities per Distance', fontsize=20 ) #, fontweight="bold")
-    matplotlib.pyplot.xticks(fontsize=8,rotation=90)
-    matplotlib.pyplot.yticks(fontsize=8)
-    matplotlib.pyplot.xlabel('Distance (miles)', fontsize=14)
-    matplotlib.pyplot.ylabel('Count of Activities', fontsize=14)
-    figure = matplotlib.pyplot.gcf()
-    figure.set_size_inches(8, 4.5)
-    matplotlib.pyplot.savefig('Number_of_Activities_per_Distance.png', dpi=300)
+    activities.plot(kind='bar',x='nearest_5k',y='cnt',rot=45,legend=None)
+    matplotlib.pyplot.title('Number of Runs per Distance', fontsize=18, fontweight="bold")
+    matplotlib.pyplot.xticks(fontsize=16)
+    matplotlib.pyplot.yticks(fontsize=16)
+    matplotlib.pyplot.xlabel('Distance (k)', fontsize=18)
+    matplotlib.pyplot.ylabel('Count of Runs', fontsize=18)
+    matplotlib.pyplot.tight_layout()
+    matplotlib.pyplot.savefig('Number_of_Runs_per_Distance.png')
     matplotlib.pyplot.clf()
 
 # py -c 'import visualiseData; visualiseData.produceTimePace()'
@@ -126,19 +119,12 @@ def produceTimePace():
     matplotlib.pyplot.gca().xaxis.set_major_formatter(matplotlib.dates.AutoDateFormatter(loc))
     matplotlib.pyplot.gcf().autofmt_xdate()
     matplotlib.pyplot.tight_layout()
-    matplotlib.pyplot.gcf().set_size_inches(18.5, 10.5)
     matplotlib.pyplot.savefig('Running_Pace_over_Time.png')
     matplotlib.pyplot.clf()
 
 # py -c 'import visualiseData; visualiseData.produceElapsedTimeDistance()'
 def produceElapsedTimeDistance():
     splits = databaseAccess.getSplits()
-    lastRun = databaseAccess.getLastRun()
-    splits["activity_date_dt"] =  pandas.to_datetime(splits["activity_date"], format="%Y/%m/%d").dt.date
-    mask = splits['activity_date_dt'] == lastRun.date()
-    lastRunSplits = splits.loc[mask]
-    lastRunSplits = pandas.merge(lastRunSplits, lastRunSplits.groupby(['activity_id'])[['elapsed_time']].agg('sum'), on=["activity_id", "activity_id"])
-    lastRunSplits['total_distance'] = lastRunSplits['total_distance'] / 1000
     splits = pandas.merge(splits, splits.groupby(['activity_id'])[['elapsed_time']].agg('sum'), on=["activity_id", "activity_id"])
     splits['total_distance'] = splits['total_distance'] / 1000
     base = datetime.datetime(1970, 1, 1, 0, 0, 0)
@@ -158,9 +144,6 @@ def produceElapsedTimeDistance():
     axes.set_ylim(ylim)
     matplotlib.pyplot.plot( splits['total_distance'], y, linestyle='', marker='o', markersize=2, alpha=0.1, color="blue")
     seaborn.regplot(x = splits['total_distance'], y = y, scatter=None, data = splits ,order = 2, ax = axes, truncate = False)
-    times = [base + datetime.timedelta(seconds=x) for x in lastRunSplits['elapsed_time_y']]
-    y = matplotlib.dates.date2num(times)
-    matplotlib.pyplot.plot( lastRunSplits['total_distance'], y, linestyle='', marker='x', markersize=8, alpha=1, color="red")
     matplotlib.pyplot.title('Time Taken Over Distances', fontsize=18, fontweight="bold")
     matplotlib.pyplot.xticks(fontsize=16)
     matplotlib.pyplot.yticks(fontsize=16)
