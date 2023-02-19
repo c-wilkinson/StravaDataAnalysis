@@ -49,6 +49,7 @@ jobs:
         if: always()
         run: |
           git config --global user.name 'GithubBot'
+          git config --global user.email 'GithubBot@9bc0ff44ae664378ab0252851a8954ad.com'
           git remote set-url origin https://x-access-token:${{ secrets.TOKEN_GITHUB }}@github.com/${{ github.repository }}
           git diff-index --quiet HEAD || git commit --allow-empty -am "Automated changes"
           git push
