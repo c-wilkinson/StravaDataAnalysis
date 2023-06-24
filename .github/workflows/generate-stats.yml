@@ -1,8 +1,7 @@
 name: GenerateStats
 on:
   schedule:
-    - cron: '0 1-23 * * *'
-    - cron: '0 0 * * *'
+    - cron: '2,17,32,47 * * * *'
   workflow_dispatch:
 jobs:
   Stats:

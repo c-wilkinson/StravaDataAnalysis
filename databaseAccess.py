@@ -7,8 +7,37 @@ from os import stat
 from datetime import datetime
 
 # Global variables for use by this file
-bufferSize = int(os.environ.get('BUFFERSIZE'))
-password = os.environ.get('ENCRYPTIONPASSWORD')
+config_file = 'config.txt'
+if os.path.isfile(config_file):
+    with open(config_file, 'r') as f:
+        lines = f.readlines()
+        bufferSize = int(lines[0].strip())
+        password = lines[1].strip()
+else:
+    bufferSize = int(os.environ.get('BUFFERSIZE'))
+    password = os.environ.get('ENCRYPTIONPASSWORD')
+
+def get_rate_limit_info():
+    decryptDatabase()
+    conn = sqlite3.connect('strava_temp.sqlite')
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+    cur.execute("CREATE TABLE IF NOT EXISTS rate_limit_info (last_request_time REAL,request_count INTEGER)")
+    cur.execute("SELECT last_request_time, request_count FROM rate_limit_info")
+    result = cur.fetchone()
+    conn.close()
+    encryptDatabase()
+    return result
+
+def update_rate_limit_info(last_request_time, request_count):
+    decryptDatabase()
+    conn = sqlite3.connect('strava_temp.sqlite')
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+    cur.execute("UPDATE rate_limit_info SET last_request_time=?, request_count=?", (last_request_time, request_count))
+    conn.commit()
+    conn.close()
+    encryptDatabase()
 
 # py -c 'import databaseAccess; databaseAccess.reset()'
 def reset():
@@ -108,7 +137,7 @@ def encryptDatabase():
     else:
         print('Unable to find database to encrypt, skipping...')
 
-def setActvities(activities):
+def setActivities(activities):
     decryptDatabase()
     conn = sqlite3.connect('strava_temp.sqlite')
     conn.row_factory = sqlite3.Row
@@ -116,7 +145,7 @@ def setActvities(activities):
     cur.execute('CREATE TABLE IF NOT EXISTS activities (id BIGINT, name NVARCHAR, upload_id BIGINT, type VARCHAR, distance NUMERIC, moving_time INT, average_speed NUMERIC, max_speed NUMERIC, total_elevation_gain NUMERIC, start_date_local DATETIME, average_cadence NUMERIC, UNIQUE(id));')
     conn.commit()
     for _, currentActivity in activities.iterrows():
-        acitivityName = currentActivity['name']
+        acitivityName = currentActivity['name'].encode('utf-8', 'ignore')
         activityId = currentActivity['id']
         print(f'Insert activity id [{activityId}], [{acitivityName}] to database')
         cur.execute('INSERT OR IGNORE INTO activities (id, name, upload_id, type, distance, moving_time, average_speed, max_speed, total_elevation_gain, start_date_local, average_cadence) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);', (activityId, acitivityName, currentActivity['upload_id'], currentActivity['type'], currentActivity['distance'], currentActivity['moving_time'], currentActivity['average_speed'], currentActivity['max_speed'], currentActivity['total_elevation_gain'], currentActivity['start_date_local'], currentActivity['average_cadence']))
@@ -138,7 +167,7 @@ def setSplits(splits):
     conn.close()
     encryptDatabase()
 
-def getActvitiesMissingSplits():
+def getActivitiesMissingSplits():
     decryptDatabase()
     conn = sqlite3.connect('strava_temp.sqlite')
     conn.row_factory = sqlite3.Row
@@ -159,7 +188,7 @@ def getActvitiesMissingSplits():
     encryptDatabase()
     return storedActivities
 
-def deleteActvitiesMissingSplits():
+def deleteActivitiesMissingSplits():
     decryptDatabase()
     conn = sqlite3.connect('strava_temp.sqlite')
     conn.row_factory = sqlite3.Row
