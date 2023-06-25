@@ -126,7 +126,7 @@ def produceTimePace():
 def produceElapsedTimeDistance():
     splits = databaseAccess.getSplits()
     lastRun = databaseAccess.getLastRun()
-    splits["activity_date_dt"] =  pandas.to_datetime(splits["activity_date"], format="%Y/%m/%d").dt.date
+    splits["activity_date_dt"] = pandas.to_datetime(splits["activity_date"], format="%Y-%m-%dT%H:%M:%SZ").dt.date
     mask = splits['activity_date_dt'] == lastRun.date()
     lastRunSplits = splits.loc[mask]
     lastRunSplits = pandas.merge(lastRunSplits, lastRunSplits.groupby(['activity_id'])[['elapsed_time']].agg('sum'), on=["activity_id", "activity_id"])
