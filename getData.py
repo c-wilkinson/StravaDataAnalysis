@@ -1,11 +1,9 @@
-import sys
 import requests
 from datetime import datetime
 import time
 from refreshTokens import strava_tokens
 import pandas
 import databaseAccess
-import sqlite3
 
 # Global variables
 activityColumns = ['id', 'name', 'upload_id', 'type', 'distance', 'moving_time', 'average_speed', 'max_speed','total_elevation_gain', 'start_date_local', 'average_cadence']
@@ -153,6 +151,8 @@ def getActivitiesAndSplits(header, start_date_unix, perPage=25, maxPages=2):
 if __name__ == '__main__':
     header = retrieveHeader()
     start_date_unix = getStartData()
+    last_request_time = None
+    request_count = 0
     # Retrieve rate limit info from the database
     rate_limit_info = databaseAccess.get_rate_limit_info()
     if rate_limit_info is None:
@@ -178,7 +178,7 @@ if __name__ == '__main__':
         runId = row['id']
         splitsDataSet = setSplits(runId, header)
         # Add to split dataset
-        splits = pandas.concat([splits, splitsDataSet])    
+        splits = pandas.concat([splits, splitsDataSet])
     if not splits.empty:
         # Only care about splits that are about 1k
         splits = splits[(splits.distance > 950) & (splits.distance < 1050)]
