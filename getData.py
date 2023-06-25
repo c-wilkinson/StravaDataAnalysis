@@ -151,6 +151,8 @@ def getActivitiesAndSplits(header, start_date_unix, perPage=25, maxPages=2):
 if __name__ == '__main__':
     header = retrieveHeader()
     start_date_unix = getStartData()
+    last_request_time = None
+    request_count = 0
     # Retrieve rate limit info from the database
     rate_limit_info = databaseAccess.get_rate_limit_info()
     if rate_limit_info is None:
