@@ -1,9 +1,11 @@
 import pandas
 import dateutil
 import datetime
+import calendar
 import seaborn
 import matplotlib
 import matplotlib.pylab
+import numpy
 import databaseAccess
 
 # py -c 'import visualiseData; visualiseData.getFastestTimes()'
@@ -66,6 +68,35 @@ def produceTimeElevation():
     matplotlib.pyplot.savefig('Running_Pace_vs_Elevation_Change.png')
     matplotlib.pyplot.clf()
 
+# py -c 'import visualiseData; visualiseData.produceTimeDistanceYear()'
+def produceTimeDistanceYear():
+    splits = databaseAccess.getSplits()
+    base = datetime.datetime(1970, 1, 1, 0, 0, 0)
+    times = [base + datetime.timedelta(seconds=x) for x in splits['elapsed_time']]
+    years = [dateutil.parser.parse(date).year for date in splits['start_date_local']]
+    unique_years = sorted(set(years))
+    cmap = matplotlib.pyplot.cm.get_cmap('tab10')
+    num_colors = len(unique_years)
+    colors = cmap.colors[:num_colors] 
+    matplotlib.pyplot.figure(figsize=(10, 6))
+    for year, color in zip(unique_years, colors):
+        indices = [i for i, y in enumerate(years) if y == year]
+        distance = [splits['total_distance'][i] for i in indices]
+        pace = [times[i] for i in indices]       
+        matplotlib.pyplot.plot(distance, pace, linestyle='', marker='o', markersize=5, alpha=0.3, color=color, label=str(year))
+        seaborn.regplot(x=distance, y=pace, scatter=None, order=2, color=color)
+    matplotlib.pyplot.title('Running Pace vs. Total Distance', fontsize=18, fontweight='bold')
+    matplotlib.pyplot.xticks(fontsize=12)
+    matplotlib.pyplot.yticks(fontsize=12)
+    matplotlib.pyplot.xlabel('Total Distance (m)', fontsize=14)
+    matplotlib.pyplot.ylabel('1km Pace (hh:mm:ss)', fontsize=14)
+    matplotlib.pyplot.gca().yaxis.set_major_formatter(matplotlib.dates.DateFormatter('%H:%M:%S'))
+    matplotlib.pyplot.gcf().autofmt_xdate()
+    matplotlib.pyplot.tight_layout()
+    matplotlib.pyplot.legend(title='Year', loc='best', fontsize=12)
+    matplotlib.pyplot.savefig('Running_Pace_vs_Total_Distance.png')
+    matplotlib.pyplot.clf()
+	
 # py -c 'import visualiseData; visualiseData.produceTimeDistance()'
 def produceTimeDistance():
     splits = databaseAccess.getSplits()
@@ -163,4 +194,68 @@ def produceElapsedTimeDistance():
     matplotlib.pyplot.gcf().autofmt_xdate()
     matplotlib.pyplot.tight_layout()
     matplotlib.pyplot.savefig('Time_Taken_Distance.png')
+    matplotlib.pyplot.clf()
+
+
+# py -c 'import visualiseData; visualiseData.produceTimeDistanceYear()'
+def produceTimeDistanceYear():
+    splits = databaseAccess.getSplits()
+    base = datetime.datetime(1970, 1, 1, 0, 0, 0)
+    times = [base + datetime.timedelta(seconds=x) for x in splits['elapsed_time']]
+    years = [dateutil.parser.parse(date).year for date in splits['start_date_local']]
+    unique_years = sorted(set(years))
+    cmap = matplotlib.pyplot.cm.get_cmap('tab10')
+    num_colors = len(unique_years)
+    colors = cmap.colors[:num_colors]
+    matplotlib.pyplot.figure(figsize=(10, 6))
+
+    month_order = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+    ]
+
+    # Generate the year-month DataFrame for the earliest year to the latest year
+    earliest_year = min(unique_years)
+    earliest_date = pandas.to_datetime(f'{earliest_year}-01-01')
+    end_date = pandas.to_datetime(f'{max(unique_years)}-12-31')
+    year_month_df = pandas.DataFrame(pandas.date_range(start=earliest_date, end=end_date, freq='M'), columns=['activity_date'])
+    year_month_df['activity_month'] = year_month_df['activity_date'].dt.strftime('%B')  # Convert to month names
+
+    for year, color in zip(unique_years, colors):
+        indices = [i for i, y in enumerate(years) if y == year]
+        year_splits = splits.iloc[indices].copy()
+
+        year_splits['activity_date'] = pandas.to_datetime(year_splits['activity_date']).dt.tz_localize(None)  # Convert 'activity_date' to datetime type
+        year_splits.set_index('activity_date', inplace=True)  # Set 'activity_date' as the index
+
+        monthly_distance_year = year_splits.groupby(pandas.Grouper(freq='M')).agg({'distance': 'sum'}) / 1000
+        monthly_distance_year = monthly_distance_year.astype(int)
+
+        # Convert 'activity_date' column to month names
+        monthly_distance_year['activity_month'] = monthly_distance_year.index.strftime('%B')
+
+        # Reset the index to remove 'activity_date' as the index column
+        monthly_distance_year.reset_index(inplace=True)
+
+        monthly_distance_year = pandas.merge(year_month_df, monthly_distance_year, how='left', on='activity_month')
+        monthly_distance_year = monthly_distance_year.fillna(0)
+
+        monthly_distance_year = monthly_distance_year.sort_values('activity_month', key=lambda x: pandas.to_datetime(x, format='%B'))  # Sort by 'activity_date'
+
+        x = monthly_distance_year['activity_month']  # Month names as X-axis labels
+        y = monthly_distance_year['distance'].values  # Distance in KM ran as Y-axis values
+
+        # Specify the month order for the X-axis
+        x = pandas.Categorical(x, categories=month_order, ordered=True)
+        y = [i for i in monthly_distance_year['distance'] if i != 0]
+        matplotlib.pyplot.plot(x, y, linestyle='-', marker='o', markersize=5, alpha=0.3, color=color, label=str(year))
+
+    matplotlib.pyplot.title('Total Distance Ran by Month', fontsize=18, fontweight='bold')
+    matplotlib.pyplot.xticks(fontsize=12, rotation='vertical')
+    matplotlib.pyplot.yticks(fontsize=12)
+    matplotlib.pyplot.xlabel('Month', fontsize=14)
+    matplotlib.pyplot.ylabel('Total Distance (km)', fontsize=14)
+    matplotlib.pyplot.tight_layout()
+    matplotlib.pyplot.legend(title='Year', loc='best', fontsize=12)
+    matplotlib.pyplot.savefig('Total_Distance_Ran_by_Month.png')
     matplotlib.pyplot.clf()
