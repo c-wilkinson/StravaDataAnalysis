@@ -79,74 +79,62 @@ def make_api_request(url, headers, params=None):
 
     return response
 
-def getActivitiesAndSplits(header, start_date_unix, perPage=25, maxPages=2):
-    # Create activities to append to
-    activities = pandas.DataFrame(columns=activityColumns)
-    # Create splits to append to
-    splits = pandas.DataFrame(columns=splitColumns)
-    page = 1
-    index = 0
-    while True:
+def getActivitesAndSplits(header, start_date_unix, per_page=25, max_pages=2):
+    def fetchActivitesAndSplits(page):
         print(f'Checking for activities on page [{page}]')
-        param = {'per_page': perPage, 'page': page, 'after': start_date_unix}
-        activityRequest = make_api_request(activitiesUrl, header, params=param).json()
-        if (not activityRequest):
+        params = {'per_page': per_page, 'page': page, 'after': start_date_unix}
+        activity_request = make_api_request(activitiesUrl, header, params=params).json()
+
+        if not activity_request:
             print('No more activities found')
+            return None, None
+
+        if 'message' in activity_request:
+            print(activity_request)
+            raise Exception("Rate limit exceeded.")
+
+        activities = []
+        splits = []
+
+        for activity in activity_request:
+            run_type = activity['type'].lower()
+            if run_type == "run":
+                run_id = activity['id']
+                print(f'Found activity id {run_id}, activity type {run_type}')
+                activities.append({
+                    'id': run_id,
+                    'name': activity['name'],
+                    'upload_id': activity['upload_id'],
+                    'type': activity['type'],
+                    'start_date_local': activity['start_date_local'],
+                    'distance': activity.get('distance', 0),
+                    'moving_time': activity.get('moving_time', 0),
+                    'average_speed': activity.get('average_speed', 0),
+                    'max_speed': activity.get('max_speed', 0),
+                    'total_elevation_gain': activity.get('total_elevation_gain', 0),
+                    'average_cadence': activity.get('average_cadence', 0)
+                })
+                splits_data_set = set_splits(run_id, header)
+                splits.append(splits_data_set)
+
+        return activities, splits
+
+    activities = []
+    splits = []
+
+    for page in range(1, max_pages + 1):
+        page_activities, page_splits = fetchActivitesAndSplits(page)
+        if page_activities is None:
             break
-        if 'message' in activityRequest:
-            # If we hit this, we've probably hit the rate limit so let's quit now
-            print(activityRequest)
-            raise Exception("We've probably hit the rate limit")
-        for currentActivity, _ in enumerate(activityRequest):
-            runType = activityRequest[currentActivity]['type']
-            if runType.lower() == "run":
-                runId = activityRequest[currentActivity]['id']
-                print(f'Found activity id {runId}, activity type {runType}')
-                # Add columns that must exist
-                activities.loc[index, 'id'] = runId
-                activities.loc[index, 'name'] = activityRequest[currentActivity]['name']
-                activities.loc[index, 'upload_id'] = activityRequest[currentActivity]['upload_id']
-                activities.loc[index, 'type'] = activityRequest[currentActivity]['type']
-                activities.loc[index, 'start_date_local'] = activityRequest[currentActivity]['start_date_local']
-                # Add columns that should exist
-                if 'distance' in activityRequest[currentActivity]:
-                    activities.loc[index, 'distance'] = activityRequest[currentActivity]['distance']
-                else:
-                    activities.loc[index, 'distance'] = 0
-                if 'moving_time' in activityRequest[currentActivity]:
-                    activities.loc[index, 'moving_time'] = activityRequest[currentActivity]['moving_time']
-                else:
-                    activities.loc[index, 'moving_time'] = 0
-                if 'average_speed' in activityRequest[currentActivity]:
-                    activities.loc[index, 'average_speed'] = activityRequest[currentActivity]['average_speed']
-                else:
-                    activities.loc[index, 'average_speed'] = 0
-                if 'max_speed' in activityRequest[currentActivity]:
-                    activities.loc[index, 'max_speed'] = activityRequest[currentActivity]['max_speed']
-                else:
-                    activities.loc[index, 'max_speed'] = 0
-                if 'total_elevation_gain' in activityRequest[currentActivity]:
-                    activities.loc[index, 'total_elevation_gain'] = activityRequest[currentActivity]['total_elevation_gain']
-                else:
-                    activities.loc[index, 'total_elevation_gain'] = 0
-                if 'average_cadence' in activityRequest[currentActivity]:
-                    activities.loc[index, 'average_cadence'] = activityRequest[currentActivity]['average_cadence']
-                else:
-                    activities.loc[index, 'average_cadence'] = 0
-                index += 1
-                splitsDataSet = setSplits(runId, header)
-                # Add to split dataset
-                splits = pandas.concat([splits, splitsDataSet])
-        # Sleep, since we've now called the API twice we can give it a break for a second
-        time.sleep(1)
-        page += 1
-        if (page > maxPages):
-            print('Finished current max pages, try again in 15 minutes')
-            break
-    if not splits.empty:
-        # Only care about splits that are about 1k
+        activities.extend(page_activities)
+        if page_splits:
+            splits.extend(page_splits)
+
+    if splits:
+        splits = pd.concat(splits)
         splits = splits[(splits.distance > 950) & (splits.distance < 1050)]
-    return activities, splits
+
+    return pd.DataFrame(activities), splits
 
 if __name__ == '__main__':
     header = retrieveHeader()
