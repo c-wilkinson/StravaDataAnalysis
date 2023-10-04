@@ -29,7 +29,7 @@ Copy the code after "&code=" to save for step 4.
 Once this has been completed, you can run "getData.py" which uses the tokens to get the data points.  If the access_token has expired, it will use the refresh_token to get a new token.
 
 ## Generated Content
-Last run was 0 years, 1 months, 9 days, 4 hours and 40 minutes ago!
+Last run was 0 years, 1 months, 9 days, 4 hours and 42 minutes ago!
 
 ![Running Pace vs Elevation Change](Running_Pace_vs_Elevation_Change.png?raw=true "Pace vs Elevation")
 
@@ -42,3 +42,11 @@ Last run was 0 years, 1 months, 9 days, 4 hours and 40 minutes ago!
 ![Number of Runs per Distance](Number_of_Runs_per_Distance.png?raw=true "Pace vs Distance")
 
 ![Fastest 1k Pace over Time](Fastest_1k_Pace_over_Time.png?raw=true "Running 1k Pace over Time")
+
+![Total Distance Run each month by year](Total_Distance_Ran_by_Month.png?raw=true "Total Distance Run each month by year")
+
+![Pace by day](Pace_by_Day.png.png?raw=true "Running Pace per day")
+
+![Activity Heatmap](Activity_Heatmap.png?raw=true "Activity Heat Map")
+
+![Cumulative Distance Run per year](Cumulative_Distance.png?raw=true "Cumulative Distance Run per year")
