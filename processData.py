@@ -46,7 +46,11 @@ def generateReadme():
         handle.write('![Running Pace over Time](Running_Pace_over_Time.png?raw=true "Running Pace over Time")\n\n')
         handle.write('![Running Pace vs Total Distance on that run](Running_Pace_vs_Total_Distance.png?raw=true "Pace vs Distance")\n\n')
         handle.write('![Number of Runs per Distance](Number_of_Runs_per_Distance.png?raw=true "Pace vs Distance")\n\n')
-        handle.write('![Fastest 1k Pace over Time](Fastest_1k_Pace_over_Time.png?raw=true "Running 1k Pace over Time")\n')
+        handle.write('![Fastest 1k Pace over Time](Fastest_1k_Pace_over_Time.png?raw=true "Running 1k Pace over Time")\n\n')
+        handle.write('![Total Distance Run each month by year](Total_Distance_Ran_by_Month.png?raw=true "Total Distance Run each month by year")\n\n')
+        handle.write('![Pace by day](Pace_by_Day.png.png?raw=true "Running Pace per day")\n\n')
+        handle.write('![Activity Heatmap](Activity_Heatmap.png?raw=true "Activity Heat Map")\n\n')
+        handle.write('![Cumulative Distance Run per year](Cumulative_Distance.png?raw=true "Cumulative Distance Run per year")\n')
 
 if __name__ == '__main__':
     generateReadme()

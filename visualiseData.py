@@ -4,6 +4,7 @@ import datetime
 import calendar
 import seaborn
 import matplotlib
+import matplotlib.dates
 import matplotlib.pylab
 import numpy
 import databaseAccess
@@ -258,4 +259,68 @@ def produceTimeDistanceYear():
     matplotlib.pyplot.tight_layout()
     matplotlib.pyplot.legend(title='Year', loc='best', fontsize=12)
     matplotlib.pyplot.savefig('Total_Distance_Ran_by_Month.png')
+    matplotlib.pyplot.clf()
+
+# py -c 'import visualiseData; visualiseData.producePaceBoxplotByDay()'
+def producePaceBoxplotByDay():
+    splits = databaseAccess.getSplits()
+    splits['activity_date_dt'] = pandas.to_datetime(splits['activity_date'])
+    splits['weekday'] = splits['activity_date_dt'].dt.day_name()
+    
+    seaborn.boxplot(data=splits, x='weekday', y='elapsed_time', order=calendar.day_name)
+    matplotlib.pyplot.title('Pace by Day of Week', fontsize=18, fontweight="bold")
+    matplotlib.pyplot.xlabel('Day', fontsize=16)
+    matplotlib.pyplot.ylabel('Pace (s)', fontsize=16)
+    matplotlib.pyplot.tight_layout()
+    matplotlib.pyplot.savefig('Pace_by_Day.png')
+    matplotlib.pyplot.clf()
+
+# py -c 'import visualiseData; visualiseData.produceCumulativeDistance()'
+def produceCumulativeDistance():
+    splits = databaseAccess.getSplits()
+    splits['activity_date_dt'] = pandas.to_datetime(splits['activity_date'])
+    splits = splits.sort_values(by='activity_date_dt')
+    
+    # Convert total_distance from meters to kilometers
+    splits['total_distance_km'] = splits['distance'] / 1000.0
+
+    # Extract year and month
+    splits['year'] = splits['activity_date_dt'].dt.year
+    splits['month'] = splits['activity_date_dt'].dt.month
+
+    # Aggregate by year and month and compute the sum of distances for each month
+    monthly_aggregated = splits.groupby(['year', 'month'])['total_distance_km'].sum().reset_index()
+    
+    # Calculate the cumulative distance for each year
+    monthly_aggregated['cumulative_distance'] = monthly_aggregated.groupby('year')['total_distance_km'].cumsum()
+
+    fig, ax = matplotlib.pyplot.subplots()
+    for year in monthly_aggregated['year'].unique():
+        yearly_data = monthly_aggregated[monthly_aggregated['year'] == year]
+        ax.plot(yearly_data['month'], yearly_data['cumulative_distance'], label=str(year))
+    
+    ax.set_xticks(range(1, 13))
+    ax.set_xticklabels(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'])
+
+    matplotlib.pyplot.title('Cumulative Distance over Time', fontsize=18, fontweight="bold")
+    matplotlib.pyplot.xlabel('Month', fontsize=16)
+    matplotlib.pyplot.ylabel('Cumulative Distance (km)', fontsize=16)
+    matplotlib.pyplot.legend(loc='upper left')
+    matplotlib.pyplot.tight_layout()
+    matplotlib.pyplot.savefig('Cumulative_Distance.png')
+    matplotlib.pyplot.clf()
+
+# py -c 'import visualiseData; visualiseData.produceActivityHeatmap()'
+def produceActivityHeatmap():
+    activities = databaseAccess.getSplits()
+    activities['activity_date_dt'] = pandas.to_datetime(activities['activity_date'])
+    pivot = activities.groupby([activities.activity_date_dt.dt.weekday, activities.activity_date_dt.dt.hour]).size().unstack().fillna(0)
+    
+    seaborn.heatmap(pivot, cmap='YlGnBu')
+    matplotlib.pyplot.title('Heatmap of Activities by Day and Hour', fontsize=18, fontweight="bold")
+    matplotlib.pyplot.xlabel('Hour of Day', fontsize=16)
+    matplotlib.pyplot.ylabel('Day of Week', fontsize=16)
+    matplotlib.pyplot.yticks(ticks=numpy.arange(7), labels=calendar.day_name, rotation=0)
+    matplotlib.pyplot.tight_layout()
+    matplotlib.pyplot.savefig('Activity_Heatmap.png')
     matplotlib.pyplot.clf()
