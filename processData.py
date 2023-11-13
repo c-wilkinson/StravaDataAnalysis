@@ -14,7 +14,7 @@ def generateReadme():
     visualiseData.produceElapsedTimeDistance()
     visualiseData.produceTimePace()
     visualiseData.getFastestTimes()
-    visualiseData.produceTimeDistanceYear()
+    # visualiseData.produceTimeDistanceYear()
     visualiseData.producePaceBoxplotByDay()
     visualiseData.produceCumulativeDistance()
     visualiseData.produceActivityHeatmap()
