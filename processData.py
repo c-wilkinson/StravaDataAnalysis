@@ -14,6 +14,10 @@ def generateReadme():
     visualiseData.produceElapsedTimeDistance()
     visualiseData.produceTimePace()
     visualiseData.getFastestTimes()
+    visualiseData.produceTimeDistanceYear()
+    visualiseData.producePaceBoxplotByDay()
+    visualiseData.produceCumulativeDistance()
+    visualiseData.produceActivityHeatmap()
     lastRun = databaseAccess.getLastRun()
     delta = relativedelta(datetime.now(), lastRun)
     if os.path.exists('README.md'):
