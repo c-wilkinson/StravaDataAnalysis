@@ -68,35 +68,6 @@ def produceTimeElevation():
     matplotlib.pyplot.tight_layout()
     matplotlib.pyplot.savefig('Running_Pace_vs_Elevation_Change.png')
     matplotlib.pyplot.clf()
-
-# py -c 'import visualiseData; visualiseData.produceTimeDistanceYear()'
-def produceTimeDistanceYear():
-    splits = databaseAccess.getSplits()
-    base = datetime.datetime(1970, 1, 1, 0, 0, 0)
-    times = [base + datetime.timedelta(seconds=x) for x in splits['elapsed_time']]
-    years = [dateutil.parser.parse(date).year for date in splits['start_date_local']]
-    unique_years = sorted(set(years))
-    cmap = matplotlib.pyplot.cm.get_cmap('tab10')
-    num_colors = len(unique_years)
-    colors = cmap.colors[:num_colors] 
-    matplotlib.pyplot.figure(figsize=(10, 6))
-    for year, color in zip(unique_years, colors):
-        indices = [i for i, y in enumerate(years) if y == year]
-        distance = [splits['total_distance'][i] for i in indices]
-        pace = [times[i] for i in indices]       
-        matplotlib.pyplot.plot(distance, pace, linestyle='', marker='o', markersize=5, alpha=0.3, color=color, label=str(year))
-        seaborn.regplot(x=distance, y=pace, scatter=None, order=2, color=color)
-    matplotlib.pyplot.title('Running Pace vs. Total Distance', fontsize=18, fontweight='bold')
-    matplotlib.pyplot.xticks(fontsize=12)
-    matplotlib.pyplot.yticks(fontsize=12)
-    matplotlib.pyplot.xlabel('Total Distance (m)', fontsize=14)
-    matplotlib.pyplot.ylabel('1km Pace (hh:mm:ss)', fontsize=14)
-    matplotlib.pyplot.gca().yaxis.set_major_formatter(matplotlib.dates.DateFormatter('%H:%M:%S'))
-    matplotlib.pyplot.gcf().autofmt_xdate()
-    matplotlib.pyplot.tight_layout()
-    matplotlib.pyplot.legend(title='Year', loc='best', fontsize=12)
-    matplotlib.pyplot.savefig('Running_Pace_vs_Total_Distance.png')
-    matplotlib.pyplot.clf()
 	
 # py -c 'import visualiseData; visualiseData.produceTimeDistance()'
 def produceTimeDistance():
@@ -198,8 +169,8 @@ def produceElapsedTimeDistance():
     matplotlib.pyplot.clf()
 
 
-# py -c 'import visualiseData; visualiseData.produceTimeDistanceYear()'
-def produceTimeDistanceYear():
+# py -c 'import visualiseData; visualiseData.produceTimeDistanceMonthYear()'
+def produceTimeDistanceMonthYear():
     splits = databaseAccess.getSplits()
     base = datetime.datetime(1970, 1, 1, 0, 0, 0)
     times = [base + datetime.timedelta(seconds=x) for x in splits['elapsed_time']]
@@ -248,7 +219,7 @@ def produceTimeDistanceYear():
 
         # Specify the month order for the X-axis
         x = pandas.Categorical(x, categories=month_order, ordered=True)
-        y = [i for i in monthly_distance_year['distance'] if i != 0]
+        y = monthly_distance_year['distance'].values
         matplotlib.pyplot.plot(x, y, linestyle='-', marker='o', markersize=5, alpha=0.3, color=color, label=str(year))
 
     matplotlib.pyplot.title('Total Distance Ran by Month', fontsize=18, fontweight='bold')
