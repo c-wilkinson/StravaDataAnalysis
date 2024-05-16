@@ -176,7 +176,7 @@ def produceTimeDistanceMonthYear():
     times = [base + datetime.timedelta(seconds=x) for x in splits['elapsed_time']]
     years = [dateutil.parser.parse(date).year for date in splits['start_date_local']]
     unique_years = sorted(set(years))
-    cmap = plt.get_cmap('tab10')  # Corrected method call
+    cmap = matplotlib.pyplot.get_cmap('tab10')  # Corrected method call
     num_colors = len(unique_years)
     colors = cmap.colors[:num_colors]
     matplotlib.pyplot.figure(figsize=(10, 6))
