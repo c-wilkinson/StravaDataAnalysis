@@ -34,7 +34,7 @@ def produceFastest1k(activities):
     dates = fastestSplits['activity_date']
     x = matplotlib.dates.date2num(dates)
     y = matplotlib.dates.date2num(times)
-    matplotlib.pylab.plot_date(x, y, linestyle='', marker='o', markersize=5, alpha=0.1, color="blue")
+    matplotlib.pylab.plot_date(x, y, linestyle='', markersize=5, alpha=0.1, color="blue")
     matplotlib.pyplot.title('Fastest 1k Pace over Time', fontsize=18, fontweight="bold")
     matplotlib.pyplot.xticks(fontsize=16, rotation='vertical')
     matplotlib.pyplot.yticks(fontsize=16)
@@ -109,7 +109,7 @@ def produceTimePace():
     base = datetime.datetime(1970, 1, 1, 0, 0, 0)
     times = [base + datetime.timedelta(seconds=x) for x in splits['elapsed_time']]
     y = matplotlib.dates.date2num(times)
-    matplotlib.pylab.plot_date(x, y, linestyle='', marker='o', markersize=5, alpha=0.1, color="blue")
+    matplotlib.pylab.plot_date(x, y, linestyle='', markersize=5, alpha=0.1, color="blue")
     matplotlib.pyplot.title('Running Pace over Time', fontsize=18, fontweight="bold")
     matplotlib.pyplot.xticks(fontsize=16, rotation='vertical')
     matplotlib.pyplot.yticks(fontsize=16)
@@ -176,7 +176,7 @@ def produceTimeDistanceMonthYear():
     times = [base + datetime.timedelta(seconds=x) for x in splits['elapsed_time']]
     years = [dateutil.parser.parse(date).year for date in splits['start_date_local']]
     unique_years = sorted(set(years))
-    cmap = matplotlib.pyplot.cm.get_cmap('tab10')
+    cmap = plt.get_cmap('tab10')  # Corrected method call
     num_colors = len(unique_years)
     colors = cmap.colors[:num_colors]
     matplotlib.pyplot.figure(figsize=(10, 6))
