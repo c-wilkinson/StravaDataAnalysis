@@ -200,7 +200,7 @@ def produceTimeDistanceMonthYear():
         year_splits['activity_date'] = pandas.to_datetime(year_splits['activity_date']).dt.tz_localize(None)  # Convert 'activity_date' to datetime type
         year_splits.set_index('activity_date', inplace=True)  # Set 'activity_date' as the index
 
-        monthly_distance_year = year_splits.groupby(pandas.Grouper(freq='M')).agg({'distance': 'sum'}) / 1000
+        monthly_distance_year = year_splits.groupby(pandas.Grouper(freq='MS')).agg({'distance': 'sum'}) / 1000
         monthly_distance_year = monthly_distance_year.astype(int)
 
         # Convert 'activity_date' column to month names
