@@ -278,7 +278,7 @@ def produceCumulativeDistance():
     splits = databaseAccess.getSplits()
     splits['activity_date_dt'] = pandas.to_datetime(splits['activity_date'])
     splits = splits.sort_values(by='activity_date_dt')
-    
+
     # Convert total_distance from meters to kilometers
     splits['total_distance_km'] = splits['distance'] / 1000.0
 
