@@ -57,7 +57,7 @@ def produceTimeElevation():
     # Set threshold for filtering elevation changes
     elevation_threshold = 100
     # Filter splits to remove extreme elevation changes
-    filtered_splits = splits[(splits['elevation_difference'] >= -elevation_threshold) & 
+    filtered_splits = splits[(splits['elevation_difference'] >= -elevation_threshold) &
                              (splits['elevation_difference'] <= elevation_threshold)]
     y = matplotlib.dates.date2num([base + datetime.timedelta(seconds=x) for x in filtered_splits['elapsed_time']])
     matplotlib.pyplot.plot(filtered_splits['elevation_difference'], y, linestyle='', marker='o', markersize=5, alpha=0.1, color="blue")
@@ -69,7 +69,7 @@ def produceTimeElevation():
     matplotlib.pyplot.tight_layout()
     matplotlib.pyplot.savefig('Running_Pace_vs_Elevation_Change.png')
     matplotlib.pyplot.clf()
-	
+
 # py -c 'import visualiseData; visualiseData.produceTimeDistance()'
 def produceTimeDistance():
     splits = databaseAccess.getSplits()
@@ -174,7 +174,6 @@ def produceElapsedTimeDistance():
 def produceTimeDistanceMonthYear():
     splits = databaseAccess.getSplits()
     base = datetime.datetime(1970, 1, 1, 0, 0, 0)
-    times = [base + datetime.timedelta(seconds=x) for x in splits['elapsed_time']]
     years = [dateutil.parser.parse(date).year for date in splits['start_date_local']]
     unique_years = sorted(set(years))
     cmap = matplotlib.pyplot.get_cmap('tab10')  # Corrected method call
