@@ -8,7 +8,7 @@ Simple data extract from the Strava API to generate some data points I'm interes
 [![CodeQL](https://github.com/c-wilkinson/StravaDataAnalysis/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/c-wilkinson/StravaDataAnalysis/actions/workflows/codeql-analysis.yml)
 
 ## Generated Content
-Last run was 0 years, 0 months, 2 days, 0 hours and 6 minutes ago!
+Last run was 0 years, 0 months, 2 days, 1 hours and 10 minutes ago!
 
 ![Running Pace vs Elevation Change](Running_Pace_vs_Elevation_Change.png?raw=true "Pace vs Elevation")
 
@@ -33,6 +33,8 @@ Last run was 0 years, 0 months, 2 days, 0 hours and 6 minutes ago!
 ![Weekly Distance Run per year](Weekly_Distance_Run_per_Year.png?raw=true "Weekly Distance Run per year")
 
 ![VO₂ Max Over Time](VO2_Max_Over_Time.png?raw=true "VO₂ Max Over Time")
+
+![Monthly Consistency Analysis](Monthly_Consistency_Analysis.png?raw=true "Monthly Consistency Analysis")
 
 ## Instructions
 As I'm sure is obvious, I'm teaching myself python as I go so the code quality is not likely to be great.  Do with it as you wish.
