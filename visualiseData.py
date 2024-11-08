@@ -288,7 +288,7 @@ def produceCumulativeDistance():
 
     # Aggregate by year and month and compute the sum of distances for each month
     monthly_aggregated = splits.groupby(['year', 'month'])['total_distance_km'].sum().reset_index()
-    
+
     # Calculate the cumulative distance for each year
     monthly_aggregated['cumulative_distance'] = monthly_aggregated.groupby('year')['total_distance_km'].cumsum()
 
