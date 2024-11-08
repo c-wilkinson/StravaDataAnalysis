@@ -173,7 +173,6 @@ def produceElapsedTimeDistance():
 # py -c 'import visualiseData; visualiseData.produceTimeDistanceMonthYear()'
 def produceTimeDistanceMonthYear():
     splits = databaseAccess.getSplits()
-    base = datetime.datetime(1970, 1, 1, 0, 0, 0)
     years = [dateutil.parser.parse(date).year for date in splits['start_date_local']]
     unique_years = sorted(set(years))
     cmap = matplotlib.pyplot.get_cmap('tab10')  # Corrected method call
@@ -237,7 +236,7 @@ def producePaceBoxplotByDay():
     splits = databaseAccess.getSplits()
     splits['activity_date_dt'] = pandas.to_datetime(splits['activity_date'])
     splits['weekday'] = splits['activity_date_dt'].dt.day_name()
-    
+
     seaborn.boxplot(data=splits, x='weekday', y='elapsed_time', order=calendar.day_name)
     matplotlib.pyplot.title('Pace by Day of Week', fontsize=18, fontweight="bold")
     matplotlib.pyplot.xlabel('Day', fontsize=16)
