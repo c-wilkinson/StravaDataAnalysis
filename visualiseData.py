@@ -295,3 +295,39 @@ def produceActivityHeatmap():
     matplotlib.pyplot.tight_layout()
     matplotlib.pyplot.savefig('Activity_Heatmap.png')
     matplotlib.pyplot.clf()
+
+# py -c 'import visualiseData; visualiseData.produceWeeklyDistance()'
+def produceWeeklyDistance():
+    splits = databaseAccess.getSplits()
+    splits['activity_date_dt'] = pandas.to_datetime(splits['activity_date'])
+    splits = splits.sort_values(by='activity_date_dt')
+
+    # Convert distance from meters to kilometers
+    splits['distance_km'] = splits['distance'] / 1000.0
+
+    # Extract year and week number
+    splits['year'] = splits['activity_date_dt'].dt.year
+    splits['week'] = splits['activity_date_dt'].dt.isocalendar().week
+
+    # Aggregate distances by year and week
+    weekly_aggregated = splits.groupby(['year', 'week'])['distance_km'].sum().reset_index()
+
+    # Plotting
+    fig, ax = matplotlib.pyplot.subplots(figsize=(12, 6))
+    width = 0.15  # Bar width to separate bars by year for each week
+
+    # Generate a bar for each year, slightly offset to avoid overlap
+    for i, year in enumerate(weekly_aggregated['year'].unique()):
+        yearly_data = weekly_aggregated[weekly_aggregated['year'] == year]
+        ax.bar(yearly_data['week'] + (i * width), yearly_data['distance_km'], width=width, label=str(year), alpha=0.8)
+
+    ax.set_xticks(range(1, 53))  # Show all week numbers on the x-axis
+    ax.set_xticklabels([str(i) for i in range(1, 53)], rotation=90)  # Rotate for better readability
+
+    matplotlib.pyplot.title('Weekly Distance Run per Year', fontsize=18, fontweight="bold")
+    matplotlib.pyplot.xlabel('Week Number', fontsize=16)
+    matplotlib.pyplot.ylabel('Distance (km)', fontsize=16)
+    matplotlib.pyplot.legend(title='Year', loc='upper right')
+    matplotlib.pyplot.tight_layout()
+    matplotlib.pyplot.savefig('Weekly_Distance_Run_per_Year.png')
+    matplotlib.pyplot.clf()

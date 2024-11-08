@@ -55,6 +55,7 @@ def generateReadme():
         handle.write('![Pace by day](Pace_by_Day.png?raw=true "Running Pace per day")\n\n')
         handle.write('![Activity Heatmap](Activity_Heatmap.png?raw=true "Activity Heat Map")\n\n')
         handle.write('![Cumulative Distance Run per year](Cumulative_Distance.png?raw=true "Cumulative Distance Run per year")\n')
+        handle.write('![Weekly Distance Run per year](Weekly_Distance_Run_per_Year.png?raw=true "Weekly Distance Run per year")\n')
 
 if __name__ == '__main__':
     generateReadme()
