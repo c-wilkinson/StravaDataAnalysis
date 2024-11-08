@@ -54,17 +54,18 @@ def produceFastest1k(activities):
 def produceTimeElevation():
     splits = databaseAccess.getSplits()
     base = datetime.datetime(1970, 1, 1, 0, 0, 0)
-    times = [base + datetime.timedelta(seconds=x) for x in splits['elapsed_time']]
-    y = matplotlib.dates.date2num(times)
-    matplotlib.pyplot.plot( splits['elevation_difference'], y, linestyle='', marker='o', markersize=5, alpha=0.1, color="blue")
-    seaborn.regplot(x = splits['elevation_difference'], y = y, scatter=None, order = 2)
+    # Set threshold for filtering elevation changes
+    elevation_threshold = 100
+    # Filter splits to remove extreme elevation changes
+    filtered_splits = splits[(splits['elevation_difference'] >= -elevation_threshold) & 
+                             (splits['elevation_difference'] <= elevation_threshold)]
+    y = matplotlib.dates.date2num([base + datetime.timedelta(seconds=x) for x in filtered_splits['elapsed_time']])
+    matplotlib.pyplot.plot(filtered_splits['elevation_difference'], y, linestyle='', marker='o', markersize=5, alpha=0.1, color="blue")
+    seaborn.regplot(x=filtered_splits['elevation_difference'], y=y, scatter=None, order=2)
     matplotlib.pyplot.title('Running Pace vs. Elevation Change', fontsize=18, fontweight="bold")
-    matplotlib.pyplot.xticks(fontsize=16)
-    matplotlib.pyplot.yticks(fontsize=16)
     matplotlib.pyplot.xlabel('Elevation Change (m)', fontsize=18)
     matplotlib.pyplot.ylabel('1km Pace (hh:mm:ss)', fontsize=18)
     matplotlib.pyplot.gca().yaxis.set_major_formatter(matplotlib.dates.DateFormatter('%H:%M:%S'))
-    matplotlib.pyplot.gcf().autofmt_xdate()
     matplotlib.pyplot.tight_layout()
     matplotlib.pyplot.savefig('Running_Pace_vs_Elevation_Change.png')
     matplotlib.pyplot.clf()
@@ -265,7 +266,7 @@ def produceCumulativeDistance():
     # Calculate the cumulative distance for each year
     monthly_aggregated['cumulative_distance'] = monthly_aggregated.groupby('year')['total_distance_km'].cumsum()
 
-    fig, ax = matplotlib.pyplot.subplots()
+    _, ax = matplotlib.pyplot.subplots()
     for year in monthly_aggregated['year'].unique():
         yearly_data = monthly_aggregated[monthly_aggregated['year'] == year]
         ax.plot(yearly_data['month'], yearly_data['cumulative_distance'], label=str(year))
@@ -313,17 +314,15 @@ def produceWeeklyDistance():
     weekly_aggregated = splits.groupby(['year', 'week'])['distance_km'].sum().reset_index()
 
     # Plotting
-    fig, ax = matplotlib.pyplot.subplots(figsize=(12, 6))
+    _, ax = matplotlib.pyplot.subplots(figsize=(12, 6))  # Removed fig
     width = 0.15  # Bar width to separate bars by year for each week
 
     # Generate a bar for each year, slightly offset to avoid overlap
     for i, year in enumerate(weekly_aggregated['year'].unique()):
         yearly_data = weekly_aggregated[weekly_aggregated['year'] == year]
         ax.bar(yearly_data['week'] + (i * width), yearly_data['distance_km'], width=width, label=str(year), alpha=0.8)
-
     ax.set_xticks(range(1, 53))  # Show all week numbers on the x-axis
     ax.set_xticklabels([str(i) for i in range(1, 53)], rotation=90)  # Rotate for better readability
-
     matplotlib.pyplot.title('Weekly Distance Run per Year', fontsize=18, fontweight="bold")
     matplotlib.pyplot.xlabel('Week Number', fontsize=16)
     matplotlib.pyplot.ylabel('Distance (km)', fontsize=16)
