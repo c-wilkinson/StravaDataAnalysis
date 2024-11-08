@@ -5,6 +5,32 @@ Simple data extract from the Strava API to generate some data points I'm interes
 [![CodeFactor](https://www.codefactor.io/repository/github/c-wilkinson/stravadataanalysis/badge)](https://www.codefactor.io/repository/github/c-wilkinson/stravadataanalysis)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/baba43376e964984a52a9a12f7209ace)](https://www.codacy.com/gh/c-wilkinson/StravaDataAnalysis/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=c-wilkinson/StravaDataAnalysis&amp;utm_campaign=Badge_Grade)[![GenerateStats](https://github.com/c-wilkinson/StravaDataAnalysis/actions/workflows/generate-stats.yml/badge.svg)](https://github.com/c-wilkinson/StravaDataAnalysis/actions/workflows/generate-stats.yml)[![CodeQL](https://github.com/c-wilkinson/StravaDataAnalysis/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/c-wilkinson/StravaDataAnalysis/actions/workflows/codeql-analysis.yml)
 
+## Generated Content
+Last run was 0 years, 0 months, 1 days, 18 hours and 7 minutes ago!
+
+![Running Pace vs Elevation Change](Running_Pace_vs_Elevation_Change.png?raw=true "Pace vs Elevation")
+
+![Time Taken per Distance](Time_Taken_Distance.png?raw=true "Time Taken per Distance")
+
+![Running Pace over Time](Running_Pace_over_Time.png?raw=true "Running Pace over Time")
+
+![Running Pace vs Total Distance on that run](Running_Pace_vs_Total_Distance.png?raw=true "Pace vs Distance")
+
+![Number of Runs per Distance](Number_of_Runs_per_Distance.png?raw=true "Pace vs Distance")
+
+![Fastest 1k Pace over Time](Fastest_1k_Pace_over_Time.png?raw=true "Running 1k Pace over Time")
+
+![Total Distance Run each month by year](Total_Distance_Ran_by_Month.png?raw=true "Total Distance Run each month by year")
+
+![Pace by day](Pace_by_Day.png?raw=true "Running Pace per day")
+
+![Activity Heatmap](Activity_Heatmap.png?raw=true "Activity Heat Map")
+
+![Cumulative Distance Run per year](Cumulative_Distance.png?raw=true "Cumulative Distance Run per year")
+
+![Weekly Distance Run per year](Weekly_Distance_Run_per_Year.png?raw=true "Weekly Distance Run per year")
+
+## Instructions
 As I'm sure is obvious, I'm teaching myself python as I go so the code quality is not likely to be great.  Do with it as you wish.
 
 1.To use, create an Application on Strava.  This can be done here: https://www.strava.com/settings/api
@@ -28,26 +54,3 @@ Copy the code after "&code=" to save for step 4.
 
 Once this has been completed, you can run "getData.py" which uses the tokens to get the data points.  If the access_token has expired, it will use the refresh_token to get a new token.
 
-## Generated Content
-Last run was 0 years, 0 months, 1 days, 17 hours and 51 minutes ago!
-
-![Running Pace vs Elevation Change](Running_Pace_vs_Elevation_Change.png?raw=true "Pace vs Elevation")
-
-![Time Taken per Distance](Time_Taken_Distance.png?raw=true "Time Taken per Distance")
-
-![Running Pace over Time](Running_Pace_over_Time.png?raw=true "Running Pace over Time")
-
-![Running Pace vs Total Distance on that run](Running_Pace_vs_Total_Distance.png?raw=true "Pace vs Distance")
-
-![Number of Runs per Distance](Number_of_Runs_per_Distance.png?raw=true "Pace vs Distance")
-
-![Fastest 1k Pace over Time](Fastest_1k_Pace_over_Time.png?raw=true "Running 1k Pace over Time")
-
-![Total Distance Run each month by year](Total_Distance_Ran_by_Month.png?raw=true "Total Distance Run each month by year")
-
-![Pace by day](Pace_by_Day.png?raw=true "Running Pace per day")
-
-![Activity Heatmap](Activity_Heatmap.png?raw=true "Activity Heat Map")
-
-![Cumulative Distance Run per year](Cumulative_Distance.png?raw=true "Cumulative Distance Run per year")
-![Weekly Distance Run per year](Weekly_Distance_Run_per_Year.png?raw=true "Weekly Distance Run per year")
