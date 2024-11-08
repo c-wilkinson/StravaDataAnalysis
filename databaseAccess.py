@@ -247,6 +247,21 @@ def getActivityDistances():
     encryptDatabase()
     return activityCount
 
+def getActivities():
+    decryptDatabase()
+    conn = sqlite3.connect('strava_temp.sqlite')
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+    cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='activities';")
+    result = cur.fetchone()
+    activities = pandas.DataFrame()
+    if result is not None:
+        activities = pandas.read_sql_query('SELECT id, name, upload_id, type, distance, moving_time, average_speed, max_speed, total_elevation_gain, start_date_local, average_cadence FROM activities', conn)
+    conn.commit()
+    conn.close()
+    encryptDatabase()
+    return activities
+
 # py -c 'import databaseAccess; databaseAccess.getLastRun()'
 def getLastRun():
     decryptDatabase()

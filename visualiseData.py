@@ -405,3 +405,52 @@ def produceVO2MaxOverTime():
     matplotlib.pyplot.tight_layout()
     matplotlib.pyplot.savefig('VO2_Max_Over_Time.png')
     matplotlib.pyplot.clf()
+
+# py -c 'import visualiseData; visualiseData.produceConsistency()'
+def produceConsistency():
+    activities = databaseAccess.getActivities()
+    activities['activity_date'] = pandas.to_datetime(activities['start_date_local'])
+    activities['year'] = activities['activity_date'].dt.year
+    activities['month'] = activities['activity_date'].dt.month
+    monthly_activity_counts = activities.groupby(['year', 'month']).agg(
+        count=('id', 'size'),
+        total_distance=('distance', 'sum')
+    ).reset_index()
+    unique_years = monthly_activity_counts['year'].unique()
+    colors = matplotlib.pyplot.get_cmap('tab20', len(unique_years)).colors
+    year_color_map = {year: color for year, color in zip(unique_years, colors)}
+    fig, ax1 = matplotlib.pylab.subplots(figsize=(12, 8))
+    bar_width = 0.15
+    months = range(1, 13)
+    for i, year in enumerate(unique_years):
+        year_data = monthly_activity_counts[monthly_activity_counts['year'] == year]
+        ax1.bar(
+            [month - 1 + i * bar_width for month in year_data['month']],  # Positioning bars
+            year_data['count'],
+            width=bar_width,
+            color=year_color_map[year],
+            alpha=0.7
+        )
+    ax1.set_title('Number of Runs and Total Distance by Month and Year', fontsize=16, fontweight='bold')
+    ax1.set_xlabel('Month')
+    ax1.set_ylabel('Number of Runs (bar)')
+    ax1.set_xticks([month - 1 + (len(unique_years) - 1) * bar_width / 2 for month in months])
+    ax1.set_xticklabels(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], rotation=45)
+    ax1.grid(axis='y', linestyle='--', alpha=0.6)
+    ax2 = ax1.twinx()
+    for year in unique_years:
+        year_data = monthly_activity_counts[monthly_activity_counts['year'] == year]
+        ax2.plot(
+            year_data['month'] - 1 + (unique_years.tolist().index(year) * bar_width),  # Align line with bars
+            year_data['total_distance'] / 1000,  # Converting meters to kilometers
+            marker='o', linestyle='-', linewidth=1.5, color=year_color_map[year]
+        )
+    ax2.set_ylabel('Total Distance ((km) line)')
+    legend_handles = [
+        matplotlib.patches.Patch(color=year_color_map[year], label=str(year))
+        for year in unique_years
+    ]
+    fig.legend(handles=legend_handles, title='Year', loc='upper right', bbox_to_anchor=(0.9, 0.9), ncol=1, framealpha=0.7)
+    fig.tight_layout()
+    fig.savefig('Monthly_Consistency_Analysis.png')
+    matplotlib.pyplot.clf()

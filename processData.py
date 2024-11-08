@@ -44,6 +44,7 @@ def generateReadme():
         handle.write('![Cumulative Distance Run per year](Cumulative_Distance.png?raw=true "Cumulative Distance Run per year")\n\n')
         handle.write('![Weekly Distance Run per year](Weekly_Distance_Run_per_Year.png?raw=true "Weekly Distance Run per year")\n\n')
         handle.write('![VO₂ Max Over Time](VO2_Max_Over_Time.png?raw=true "VO₂ Max Over Time")\n\n')
+        handle.write('![Monthly Consistency Analysis](Monthly_Consistency_Analysis.png?raw=true "Monthly Consistency Analysis")\n\n')
         handle.write('## Instructions\n')
         handle.write("As I'm sure is obvious, I'm teaching myself python as I go so the code quality is not likely to be great.  Do with it as you wish.\n\n")
         handle.write('1.To use, create an Application on Strava.  This can be done here: https://www.strava.com/settings/api\n')
