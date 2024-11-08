@@ -6,20 +6,27 @@ import pandas
 import databaseAccess
 
 # Global variables
-activityColumns = ['id', 'name', 'upload_id', 'type', 'distance', 'moving_time', 'average_speed', 'max_speed','total_elevation_gain', 'start_date_local', 'average_cadence']
+activityColumns = ['id', 'name', 'upload_id', 'type', 'distance', 'moving_time', 'average_speed', 'max_speed', 'total_elevation_gain', 'start_date_local', 'average_cadence']
 splitColumns = ['average_speed', 'distance', 'elapsed_time', 'elevation_difference', 'moving_time', 'pace_zone', 'split', 'average_grade_adjusted_speed', 'average_heartrate', 'id', 'date']
 activitiesUrl = "https://www.strava.com/api/v3/activities"
+last_request_time = None
+request_count = 0
 
 # Rate limit variables
 REQUESTS_PER_15_MINUTES = 100
 REQUESTS_PER_24_HOURS = 1000
 RATE_LIMIT_RESET_SECONDS = 60 * 15  # 15 minutes
 RATE_LIMIT_RESET_24_HOURS = 60 * 60 * 24  # 24 hours
+REQUEST_TIMEOUT = 10  # 10 seconds timeout for requests
 
 def setSplits(runId, header):
     splitsUrl = activitiesUrl + '/' + str(runId)
     print(f'Getting split information for [{runId}]')
-    splitsRequest = requests.get(splitsUrl, headers=header).json()
+    try:
+        splitsRequest = requests.get(splitsUrl, headers=header, timeout=REQUEST_TIMEOUT).json()
+    except requests.exceptions.Timeout:
+        print(f"Timeout occurred while fetching splits for run ID {runId}")
+        return pandas.DataFrame()  # Return empty DataFrame if timeout
     if 'message' in splitsRequest:
         # If we hit this, we've probably hit the rate limit so let's quit now
         print(splitsRequest)
@@ -60,9 +67,12 @@ def make_api_request(url, headers, params=None):
                 # Reset rate limit variables
                 last_request_time = None
                 request_count = 0
-
-    # Make API request
-    response = requests.get(url, headers=headers, params=params)
+    try:
+        # Make API request
+        response = requests.get(url, headers=headers, params=params, timeout=REQUEST_TIMEOUT)
+    except requests.exceptions.Timeout:
+        print("Timeout occurred while making API request")
+        return None  # Return None if timeout occurs
 
     # Update rate limit variables
     last_request_time = time.time()
