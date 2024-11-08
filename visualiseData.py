@@ -296,7 +296,7 @@ def produceCumulativeDistance():
     for year in monthly_aggregated['year'].unique():
         yearly_data = monthly_aggregated[monthly_aggregated['year'] == year]
         ax.plot(yearly_data['month'], yearly_data['cumulative_distance'], label=str(year))
-    
+
     ax.set_xticks(range(1, 13))
     ax.set_xticklabels(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'])
 
