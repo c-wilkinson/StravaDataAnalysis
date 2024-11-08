@@ -22,7 +22,7 @@ def calculate_gap(pace_sec_km, elevation_gain_m, distance_m):
 def estimate_vo2_max(pace_sec_km, run_date, heart_rate=None):
     # Calculate speed in meters per minute
     speed_m_min = (1000 / pace_sec_km) * 60
-    
+
     # Use the ACSM formula for VO2 max
     vo2_max = (speed_m_min * 0.2) + 3.5
 
