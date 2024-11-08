@@ -9,6 +9,34 @@ import matplotlib.pylab
 import numpy
 import databaseAccess
 
+# If you fork this repo, add your date of birth here instead of mine
+dob = datetime.datetime(1985, 1, 26)
+
+def calculate_gap(pace_sec_km, elevation_gain_m, distance_m):
+    # Calculate grade as a percentage
+    grade = (elevation_gain_m / distance_m) * 100  # Grade in percent
+    adjustment_sec_km = grade * 12  # 12 seconds per km per 1% grade
+    gap_sec_km = pace_sec_km - adjustment_sec_km
+    return gap_sec_km
+
+def estimate_vo2_max(pace_sec_km, run_date, heart_rate=None):
+    # Calculate speed in meters per minute
+    speed_m_min = (1000 / pace_sec_km) * 60
+    
+    # Use the ACSM formula for VO2 max
+    vo2_max = (speed_m_min * 0.2) + 3.5
+
+    # Calculate age based on DOB and run date
+    age = run_date.year - dob.year - ((run_date.month, run_date.day) < (dob.month, dob.day))
+
+    # Adjust for heart rate if available
+    if heart_rate:
+        max_hr = 220 - age  # Simplistic max HR formula
+        hr_adjustment = 1 + ((max_hr - heart_rate) / max_hr) * 0.1  # Adjusted impact factor for HR
+        vo2_max *= hr_adjustment
+
+    return vo2_max
+
 # py -c 'import visualiseData; visualiseData.getFastestTimes()'
 def getFastestTimes():
     splits = databaseAccess.getSplits()
@@ -327,4 +355,53 @@ def produceWeeklyDistance():
     matplotlib.pyplot.legend(title='Year', loc='upper right')
     matplotlib.pyplot.tight_layout()
     matplotlib.pyplot.savefig('Weekly_Distance_Run_per_Year.png')
+    matplotlib.pyplot.clf()
+
+# py -c 'import visualiseData; visualiseData.produceVO2MaxOverTime()'
+def produceVO2MaxOverTime():
+    activities = databaseAccess.getSplits()
+    activities['elapsed_time'] = pandas.to_numeric(activities['elapsed_time'], errors='coerce')
+    activities['distance'] = pandas.to_numeric(activities['distance'], errors='coerce')
+    activities['elevation_difference'] = pandas.to_numeric(activities['elevation_difference'], errors='coerce')
+    activities['average_heartrate'] = pandas.to_numeric(activities['average_heartrate'], errors='coerce')
+    activities['pace_sec_km'] = activities['elapsed_time'] / (activities['distance'] / 1000)
+    # Filter out entries with zero distance to avoid division by zero
+    activities = activities[activities['distance'] > 0]
+    # Calculate GAP
+    activities['gap_sec_km'] = activities.apply(
+        lambda row: calculate_gap(row['pace_sec_km'], row['elevation_difference'], row['distance']),
+        axis=1
+    )
+    activities['activity_date'] = pandas.to_datetime(activities['activity_date'])
+    # Estimate VO2 max using GAP instead of actual pace
+    activities['vo2_max'] = activities.apply(
+        lambda row: estimate_vo2_max(
+            row['gap_sec_km'],
+            row['activity_date'],
+            row.get('average_heartrate')
+        ),
+        axis=1
+    )
+    # Apply rolling average over the last 30 runs
+    activities['vo2_max_rolling'] = activities['vo2_max'].rolling(window=30).mean()
+    activities.sort_values('activity_date', inplace=True)
+    matplotlib.pyplot.figure(figsize=(12, 6))
+    matplotlib.pyplot.plot(activities['activity_date'], activities['vo2_max_rolling'], marker='o', linestyle='-', markersize=4, alpha=0.7, label="30-Run Average VO₂ Max")
+    seaborn.regplot(
+        x=matplotlib.dates.date2num(activities['activity_date']),
+        y=activities['vo2_max_rolling'],
+        scatter=False,
+        ci=80,
+        line_kws={"color": "blue", "alpha": 0.5}
+    )
+    matplotlib.pyplot.title('Estimated VO₂ Max Over Time (30-Run Rolling Average)', fontsize=18)
+    matplotlib.pyplot.xlabel('Date', fontsize=14)
+    matplotlib.pyplot.ylabel('VO₂ Max', fontsize=14)
+    matplotlib.pyplot.xticks(rotation=45)
+    matplotlib.pyplot.grid(True)
+    matplotlib.pyplot.legend()
+    matplotlib.pyplot.gca().xaxis.set_major_locator(matplotlib.dates.MonthLocator(interval=2))
+    matplotlib.pyplot.gca().xaxis.set_major_formatter(matplotlib.dates.DateFormatter('%Y-%m'))
+    matplotlib.pyplot.tight_layout()
+    matplotlib.pyplot.savefig('VO2_Max_Over_Time.png')
     matplotlib.pyplot.clf()
