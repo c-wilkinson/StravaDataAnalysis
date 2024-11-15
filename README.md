@@ -8,7 +8,7 @@ Simple data extract from the Strava API to generate some data points I'm interes
 [![CodeQL](https://github.com/c-wilkinson/StravaDataAnalysis/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/c-wilkinson/StravaDataAnalysis/actions/workflows/codeql-analysis.yml)
 
 ## Generated Content
-Last run was 0 years, 0 months, 1 days, 18 hours and 16 minutes ago!
+Last run was 0 years, 0 months, 1 days, 18 hours and 58 minutes ago!
 
 ![Running Pace vs Elevation Change](Running_Pace_vs_Elevation_Change.png?raw=true "Pace vs Elevation")
 
