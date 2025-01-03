@@ -22,6 +22,7 @@ jobs:
           pip install seaborn
           pip install matplotlib
           pip install requests
+          pip install typing_extensions
       - name: Get Data
         env:
           BUFFERSIZE: ${{ secrets.BUFFERSIZE }}
