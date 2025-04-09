@@ -1,0 +1,61 @@
+"""
+Main entry point for running Strava data retrieval, processing, and visualization.
+"""
+
+from strava_data.auth import get_or_refresh_tokens
+from strava_data.db.dao import decrypt_database, encrypt_database, init_database, insert_activities, insert_splits
+from strava_data.strava_api.client import fetch_activities, fetch_splits_if_needed
+from strava_data.strava_api.processing.transform import transform_activities, transform_splits
+from strava_data.strava_api.visualisation import graphs
+import pandas as pd
+
+
+def main() -> None:
+    """
+    1. Authenticates or refreshes Strava tokens.
+    2. Initializes the database if needed.
+    3. Fetches new activities from Strava and their splits.
+    4. Transforms and stores them in the database.
+    5. Generates the graphs using all data from the database.
+    """
+    decrypt_database()
+    init_database()
+    get_or_refresh_tokens()
+
+    new_activities = fetch_activities(per_page=50)
+    if not new_activities.empty:
+        # Fetch splits and combine them
+        new_splits = fetch_splits_if_needed(new_activities)
+        transformed_activities = transform_activities(new_activities)
+        transformed_splits = transform_splits(new_splits)
+        insert_activities(transformed_activities)
+        insert_splits(transformed_splits)
+
+    if not new_activities.empty:
+        generate_required_charts(transformed_activities, transformed_splits)
+    
+    encrypt_database()
+    print("Done.")
+
+
+def generate_required_charts(activities_df: pd.DataFrame, splits_df: pd.DataFrame) -> None:
+    """
+    Produces the charts from the specified DataFrames.
+
+    :param activities_df: DataFrame of Strava activities.
+    :param splits_df: DataFrame of 1 km splits from those activities.
+    """
+    graphs.plot_pace_vs_elevation_change(splits_df, "Running_Pace_vs_Elevation_Change.png")
+    graphs.plot_time_taken_over_distances(activities_df, splits_df, "Time_Taken_Distance.png")
+    graphs.plot_running_pace_over_time(splits_df, "Running_Pace_over_Time.png")
+    graphs.plot_pace_vs_total_distance(splits_df, "Running_Pace_vs_Total_Distance.png")
+    graphs.plot_number_of_runs_per_distance(activities_df, "Number_of_Runs_per_Distance.png")
+    graphs.plot_fastest_1km_pace_over_time(splits_df, "Fastest_1k_Pace_over_Time.png")
+    graphs.plot_total_distance_by_month(activities_df, "Total_Distance_Ran_by_Month.png")
+    graphs.plot_pace_by_day_of_week(splits_df, "Pace_by_Day.png")
+    graphs.plot_heatmap_activities(activities_df, "Activity_Heatmap.png")
+    graphs.plot_cumulative_distance_over_time(activities_df, "Cumulative_Distance.png")
+
+
+if __name__ == "__main__":
+    main()
