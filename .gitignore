@@ -1,4 +1,5 @@
 config.txt
+strava_temp.sqlite
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -1,0 +1,39 @@
+name: Generate Stats and Update README
+
+on:
+  schedule:
+    - cron: '2,17,32,47 * * * *'
+  workflow_dispatch:
+jobs:
+  generate-readme:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+
+      - name: Install dependencies
+        run: |
+          pip install poetry
+          poetry install
+
+      - name: Generate Stats and README
+        run: |
+          poetry run python src/strava_data/generate_readme.py
+
+      - name: Commit and push changes
+        run: |
+          git config --global user.name 'GithubBot'
+          git config --global user.email 'GithubBot@9bc0ff44ae664378ab0252851a8954ad.com'
+          git remote set-url origin https://x-access-token:${{ secrets.TOKEN_GITHUB }}@github.com/${{ github.repository }}
+          git diff-index --quiet HEAD || git commit --allow-empty -am "Automated changes"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
