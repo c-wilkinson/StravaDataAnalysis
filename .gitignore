@@ -1,5 +1,6 @@
 config.txt
 strava_temp.sqlite
+*.lock
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
