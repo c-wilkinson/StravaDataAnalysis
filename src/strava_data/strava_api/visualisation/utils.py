@@ -4,6 +4,7 @@ Utilities for chart styling or other shared visualisation helpers.
 
 import matplotlib.pyplot as plt
 
+
 def configure_matplotlib_styles() -> None:
     """
     Applies consistent style settings across all charts.

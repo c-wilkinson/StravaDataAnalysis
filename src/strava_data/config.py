@@ -13,10 +13,14 @@ if os.path.isfile(CONFIG_FILE):
         lines = file_handle.read().splitlines()
         BUFFER_SIZE = int(lines[0].strip())  # First line
         ENCRYPTION_PASSWORD = lines[1].strip()  # Second line
+        CLIENT_ID = lines[2].strip()  # Third line
+        CLIENT_SECRET = lines[3].strip()  # Forth line
 else:
     # Fallback to environment variables
     BUFFER_SIZE = int(os.environ.get("BUFFERSIZE", 65536))  # default 64KB
     ENCRYPTION_PASSWORD = os.environ.get("ENCRYPTIONPASSWORD", "default_password")
+    CLIENT_ID = os.environ.get("CLIENT_ID", "")
+    CLIENT_SECRET = os.environ.get("CLIENT_SECRET", "")
 
 
 def get_buffer_size() -> int:
@@ -39,11 +43,11 @@ def get_client_id() -> str:
     """
     Retrieves Strava client ID from environment variables.
     """
-    return os.environ.get("CLIENT_ID", "")
+    return CLIENT_ID
 
 
 def get_client_secret() -> str:
     """
     Retrieves Strava client secret from environment variables.
     """
-    return os.environ.get("CLIENT_SECRET", "")
+    return CLIENT_SECRET

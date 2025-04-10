@@ -2,142 +2,219 @@
 Contains the chart functions, each saving a PNG file.
 """
 
-import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
-import numpy as np
 import calendar
 import datetime
+
 import matplotlib.dates as mdates
+from matplotlib import ticker
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import seaborn as sns
+
 from strava_data.strava_api.visualisation.utils import configure_matplotlib_styles
 
 configure_matplotlib_styles()
 
 
+def _prepare_pace_distance_data(splits_df: pd.DataFrame) -> pd.DataFrame:
+    splits = splits_df.copy()
+    splits["pace_sec_km"] = splits["elapsed_time_s"] / (splits["distance_m"] / 1000)
+    grouped_df = (
+        splits.groupby(["activity_id", "start_date_local"])
+        .agg({"distance_m": "sum", "elapsed_time_s": "sum"})
+        .reset_index()
+    )
+    grouped_df["pace_sec_km"] = grouped_df["elapsed_time_s"] / (grouped_df["distance_m"] / 1000)
+    grouped_df["distance_km"] = grouped_df["distance_m"] / 1000
+    grouped_df["pace_sec"] = grouped_df["pace_sec_km"]
+    grouped_df["year"] = pd.to_datetime(grouped_df["start_date_local"]).dt.year
+    return grouped_df
+
+
+def _prepare_time_distance_data(activities_df: pd.DataFrame) -> pd.DataFrame:
+    """Cleans and augments data for time over distance plot."""
+    data = activities_df.copy()
+    data["distance_km"] = data["distance_m"] / 1000.0
+    data = data[data["distance_km"] >= 0.5]
+    data["time_seconds"] = data["moving_time_s"]
+    data["year"] = pd.to_datetime(data["start_date_local"]).dt.year
+    last_run_date = pd.to_datetime(data["start_date_local"]).max()
+    data["is_last_run"] = pd.to_datetime(data["start_date_local"]) == last_run_date
+    return data
+
+
+def _calculate_decay_point(data: pd.DataFrame) -> tuple[float, float]:
+    """Calculates decay distance and time for overall trend extension."""
+    max_distance = data["distance_km"].max()
+    max_time = data["time_seconds"].max()
+    decay_distance = max_distance + 2
+    average_pace = max_time / max_distance
+    decay_time = decay_distance * (average_pace + 180)
+    return decay_distance, decay_time
+
+
 def plot_pace_vs_elevation_change(splits_df: pd.DataFrame, output_path: str) -> None:
     """
-    1) Running Pace vs. Elevation Change:
-       - y-axis: 1 km pace (hh:mm:ss) or min/km, x-axis: elevation change
-       - Points colored differently by year
-       - Single overall trend line with confidence bands
-       - Differentiates indoor vs. outdoor if available
+    Plot Running Pace vs. Elevation Change for 1km splits.
+    - y-axis: pace (mm:ss)
+    - x-axis: elevation change (m)
+    - Points coloured by year
+    - Trend line included
     """
     if splits_df.empty:
         return
 
-    # We assume each split is ~1 km. Compute pace in s/km or min/km
-    # "elapsed_time_s" is total seconds for the split
-    splits_df = splits_df.copy()
-    splits_df["pace_sec_km"] = splits_df["elapsed_time_s"].astype(float)
+    # Filter to only ~1 km splits (between 950 and 1050 meters)
+    splits = splits_df[(splits_df["distance_m"] > 950) & (splits_df["distance_m"] < 1050)].copy()
+    if splits.empty:
+        return
 
-    # For elevation difference
-    splits_df["year"] = pd.to_datetime(splits_df["start_date_local"]).dt.year
+    # Remove extreme elevation changes
+    splits = splits[
+        (splits["elevation_difference_m"] >= -100) & (splits["elevation_difference_m"] <= 100)
+    ]
 
-    # Plot
-    plt.figure()
+    # Calculate pace in sec/km
+    splits["pace_s_km"] = splits["elapsed_time_s"] / (splits["distance_m"] / 1000)
+
+    # Extract year
+    splits["year"] = pd.to_datetime(splits["start_date_local"]).dt.year
+
+    # Format function for y-axis (mm:ss)
+    def format_pace(value, _):
+        minutes = int(value // 60)
+        seconds = int(value % 60)
+        return f"{minutes}:{seconds:02d}"
+
+    plt.figure(figsize=(10, 6))
     sns.scatterplot(
-        data=splits_df,
+        data=splits,
         x="elevation_difference_m",
-        y="pace_sec_km",
+        y="pace_s_km",
         hue="year",
-        alpha=0.5
+        alpha=0.6,
+        palette="viridis",
     )
 
-    # Overall trend line (all data)
     sns.regplot(
-        data=splits_df,
+        data=splits,
         x="elevation_difference_m",
-        y="pace_sec_km",
+        y="pace_s_km",
         scatter=False,
-        ci=95,
         color="black",
-        line_kws={"linestyle": "--"}
+        line_kws={"linestyle": "--"},
+        ci=95,
     )
 
-    plt.title("Running Pace vs. Elevation Change")
+    plt.gca().yaxis.set_major_formatter(ticker.FuncFormatter(format_pace))
+    plt.ylabel("Split Pace (mm:ss)")
     plt.xlabel("Elevation Change (m)")
-    plt.ylabel("Split Pace (s/km)")
+    plt.title("Running Pace vs. Elevation Change")
     plt.tight_layout()
     plt.savefig(output_path)
     plt.close()
 
 
-def plot_time_taken_over_distances(
-    activities_df: pd.DataFrame,
-    splits_df: pd.DataFrame,
-    output_path: str
-) -> None:
+def plot_time_taken_over_distances(activities_df: pd.DataFrame, output_path: str) -> None:
     """
-    2) Time Taken Over Distances:
-       - y-axis: total time (hh:mm:ss)
-       - x-axis: total distance (km)
-       - Points colored by year
-       - Trend line per year, plus overall average up to 44 km
-       - Last run marked with a red X
+    Time Taken Over Distances:
+    - y-axis: total time (hh:mm:ss) with 15-minute intervals
+    - x-axis: total distance (km) with 5 km intervals
+    - Points colored by year
+    - Trend line per year (same color, not labeled)
+    - Overall trend in dashed black, labeled
+    - Last run marked with a red X
+    - Filters out runs shorter than 0.5 km
+    - Decay logic: +180s/km added at max distance + 2km
     """
     if activities_df.empty:
         return
 
-    df = activities_df.copy()
+    data = _prepare_time_distance_data(activities_df)
+    if data.empty:
+        return
 
-    # Convert distance to km
-    df["distance_km"] = df["distance_m"] / 1000.0
-    df["time_hours"] = df["moving_time_s"] / 3600.0
-    df["year"] = pd.to_datetime(df["start_date_local"]).dt.year
-
-    last_run_date = pd.to_datetime(df["start_date_local"]).max()
-    df["is_last_run"] = pd.to_datetime(df["start_date_local"]) == last_run_date
+    decay_distance, decay_time = _calculate_decay_point(data)
 
     plt.figure()
-    sns.scatterplot(
-        data=df,
-        x="distance_km",
-        y="time_hours",
-        hue="year",
-        alpha=0.5
-    )
+    axis = plt.gca()
+    palette = sns.color_palette(n_colors=data["year"].nunique())
+    year_color_map = dict(zip(sorted(data["year"].unique()), palette))
 
-    # Mark last run with red X
-    last_run_df = df[df["is_last_run"]]
-    if not last_run_df.empty:
-        plt.plot(
-            last_run_df["distance_km"],
-            last_run_df["time_hours"],
+    for year in sorted(data["year"].unique()):
+        year_data = data[data["year"] == year]
+        sns.scatterplot(
+            data=year_data,
+            x="distance_km",
+            y="time_seconds",
+            color=year_color_map[year],
+            alpha=0.5,
+            label=year,
+            ax=axis,
+        )
+
+    last_run = data[data["is_last_run"]]
+    if not last_run.empty:
+        axis.plot(
+            last_run["distance_km"],
+            last_run["time_seconds"],
             "x",
             color="red",
             markersize=10,
-            label="Last Run"
+            label="Last Run",
         )
 
-    # Trend line per year
-    for yr in df["year"].unique():
-        sub = df[df["year"] == yr]
+    for year in sorted(data["year"].unique()):
+        sub = data[data["year"] == year][["distance_km", "time_seconds"]].copy()
+        sub = pd.concat([pd.DataFrame.from_records([{"distance_km": 0, "time_seconds": 0}]), sub])
         sns.regplot(
             data=sub,
             x="distance_km",
-            y="time_hours",
+            y="time_seconds",
             scatter=False,
             ci=None,
-            label=f"Trend {yr}"
+            truncate=False,
+            line_kws={"color": year_color_map[year], "alpha": 0.6},
+            ax=axis,
         )
 
-    # Overall trend line
+    overall = pd.concat(
+        [
+            pd.DataFrame.from_records([{"distance_km": 0, "time_seconds": 0}]),
+            data[["distance_km", "time_seconds"]],
+            pd.DataFrame.from_records(
+                [{"distance_km": decay_distance, "time_seconds": decay_time}]
+            ),
+        ]
+    )
     sns.regplot(
-        data=df,
+        data=overall,
         x="distance_km",
-        y="time_hours",
+        y="time_seconds",
         scatter=False,
         ci=None,
         color="black",
         line_kws={"linestyle": "--"},
-        label="Overall Trend"
+        ax=axis,
+        label="Overall Trend",
+        truncate=False,
     )
+
+    def seconds_to_hms(value, _):
+        return str(datetime.timedelta(seconds=int(value)))
+
+    axis.yaxis.set_major_formatter(ticker.FuncFormatter(seconds_to_hms))
+    axis.yaxis.set_major_locator(ticker.MultipleLocator(15 * 60))
+    axis.xaxis.set_major_locator(ticker.MultipleLocator(5))
+
+    axis.set_xlim(0, (int(decay_distance / 5) + 1) * 5)
+    axis.set_ylim(0, (int((decay_time * 1.05) / (15 * 60)) + 1) * (15 * 60))
 
     plt.title("Time Taken Over Distances")
     plt.xlabel("Distance (km)")
-    plt.ylabel("Time (hours)")
-    plt.xlim([0, 44])  # Extend to 44 km if desired
-    plt.legend()
+    plt.ylabel("Time Taken (hh:mm:ss)")
+    plt.legend(title="Year")
     plt.tight_layout()
     plt.savefig(output_path)
     plt.close()
@@ -145,33 +222,40 @@ def plot_time_taken_over_distances(
 
 def plot_running_pace_over_time(splits_df: pd.DataFrame, output_path: str) -> None:
     """
-    3) Running pace over time:
-       - y-axis: 1 km pace (sec or min)
-       - x-axis: date
-       - Points for each split or activity
-       - Trend line to show changes
+    Running pace over time:
+    - y-axis: 1 km pace (mm:ss)
+    - x-axis: date
+    - Points for each ~1 km split
+    - Trend line to show changes
     """
     if splits_df.empty:
         return
 
-    df = splits_df.copy()
-    df["pace_sec_km"] = df["elapsed_time_s"]
-    df["date"] = pd.to_datetime(df["start_date_local"]).dt.date
+    pace_data = splits_df.copy()
+    pace_data["distance_km"] = pace_data["distance_m"] / 1000.0
 
-    # Convert dates to numeric
-    df["datetime_obj"] = pd.to_datetime(df["start_date_local"], errors="coerce")
-    df["date_numeric"] = mdates.date2num(df["datetime_obj"])
-    df.sort_values("date_numeric", inplace=True)
+    # Filter to ~1 km splits (0.95 to 1.05 km)
+    pace_data = pace_data[(pace_data["distance_km"] >= 0.95) & (pace_data["distance_km"] <= 1.05)]
+    if pace_data.empty:
+        return
+
+    pace_data["pace_sec_km"] = pace_data["elapsed_time_s"] / pace_data["distance_km"]
+    pace_data["datetime_obj"] = pd.to_datetime(pace_data["start_date_local"], errors="coerce")
+    pace_data["date_numeric"] = mdates.date2num(pace_data["datetime_obj"])
+    pace_data.sort_values("date_numeric", inplace=True)
+
+    def format_minutes_seconds(value, _):
+        if np.isnan(value):
+            return ""
+        minutes = int(value) // 60
+        seconds = int(value) % 60
+        return f"{minutes}:{seconds:02d}"
 
     plt.figure()
-    sns.scatterplot(
-        data=df,
-        x="date_numeric",
-        y="pace_sec_km",
-        alpha=0.5
-    )
+    axis = plt.gca()
+    sns.scatterplot(data=pace_data, x="date_numeric", y="pace_sec_km", alpha=0.5)
     sns.regplot(
-        data=df,
+        data=pace_data,
         x="date_numeric",
         y="pace_sec_km",
         scatter=False,
@@ -180,14 +264,12 @@ def plot_running_pace_over_time(splits_df: pd.DataFrame, output_path: str) -> No
         line_kws={"linestyle": "--"},
     )
 
-    plt.title("Running Pace Over Time")
-    plt.xlabel("Date")
-    plt.ylabel("Pace (s/km)")
-
-    # Format date ticks
-    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter("%Y-%m"))
+    axis.set_title("Running Pace Over Time")
+    axis.set_xlabel("Date")
+    axis.set_ylabel("Pace (mm:ss)")
+    axis.yaxis.set_major_formatter(ticker.FuncFormatter(format_minutes_seconds))
+    axis.xaxis.set_major_formatter(mdates.DateFormatter("%Y-%m"))
     plt.xticks(rotation=45)
-
     plt.tight_layout()
     plt.savefig(output_path)
     plt.close()
@@ -195,54 +277,74 @@ def plot_running_pace_over_time(splits_df: pd.DataFrame, output_path: str) -> No
 
 def plot_pace_vs_total_distance(splits_df: pd.DataFrame, output_path: str) -> None:
     """
-    4) Running pace vs total distance of that run:
-       - y-axis: pace (sec per km)
-       - x-axis: total distance (km)
-       - Points colored by year
-       - Trend lines by year
+    Running pace vs total distance of that run:
+    - x-axis: total distance (km)
+    - y-axis: average pace (mm:ss per km)
+    - Points colored by year
+    - Trend lines by year (matched color, not shown in legend)
     """
     if splits_df.empty:
         return
 
-    df = splits_df.copy()
+    data = _prepare_pace_distance_data(splits_df)
+    if data.empty:
+        return
 
-    # We assume there's a column with total distance for the entire activity if you joined data.
-    # If not, you'd need to merge on activity info.
-    # For now, let's treat "distance_m" as the split distance. We need the total run distance
-    # from the activities DF or some joined approach. This is left to user to unify data.
-
-    # As a placeholder, we treat each split's "distance_m" as total distance, which is incorrect
-    # in real usage. Adjust logic as needed if you have that data joined.
-
-    df["distance_km"] = df["distance_m"] / 1000.0
-    df["pace_sec_km"] = df["elapsed_time_s"]
-    df["year"] = pd.to_datetime(df["start_date_local"]).dt.year
-
+    max_distance = data["distance_km"].max()
     plt.figure()
-    sns.scatterplot(
-        data=df,
-        x="distance_km",
-        y="pace_sec_km",
-        hue="year",
-        alpha=0.5
-    )
+    axis = plt.gca()
 
-    # Trend line per year
-    for yr in df["year"].unique():
-        sub = df[df["year"] == yr]
-        sns.regplot(
-            data=sub,
+    palette = sns.color_palette(n_colors=data["year"].nunique())
+    year_color_map = dict(zip(sorted(data["year"].unique()), palette))
+
+    for year in sorted(data["year"].unique()):
+        year_data = data[data["year"] == year]
+        sns.scatterplot(
+            data=year_data,
             x="distance_km",
-            y="pace_sec_km",
-            scatter=False,
-            ci=None,
-            label=f"Year {yr}"
+            y="pace_sec",
+            color=year_color_map[year],
+            alpha=0.5,
+            label=year,
+            ax=axis,
         )
 
+    for year in sorted(data["year"].unique()):
+        year_data = data[data["year"] == year].copy()
+        if year_data.empty:
+            continue
+        distance_max = year_data["distance_km"].max()
+        pace_max = year_data["pace_sec"].max()
+        decay_distance = distance_max + 2
+        decay_pace = pace_max + 180
+
+        extended_data = pd.concat(
+            [
+                year_data,
+                pd.DataFrame.from_records(
+                    [{"distance_km": decay_distance, "pace_sec": decay_pace}]
+                ),
+            ]
+        )
+        sns.regplot(
+            data=extended_data,
+            x="distance_km",
+            y="pace_sec",
+            scatter=False,
+            ci=None,
+            truncate=False,
+            line_kws={"color": year_color_map[year], "alpha": 0.6},
+            ax=axis,
+        )
+
+    plt.xlim(0, max_distance + 3)
     plt.title("Running Pace vs. Total Distance")
-    plt.xlabel("Distance (km)")
-    plt.ylabel("Pace (s/km)")
-    plt.legend()
+    plt.xlabel("Total Distance (km)")
+    plt.ylabel("Average Pace (mm:ss per km)")
+    axis.yaxis.set_major_formatter(
+        plt.FuncFormatter(lambda val, _: f"{int(val // 60):02d}:{int(val % 60):02d}")
+    )
+    plt.legend(title="Year")
     plt.tight_layout()
     plt.savefig(output_path)
     plt.close()
@@ -250,33 +352,29 @@ def plot_pace_vs_total_distance(splits_df: pd.DataFrame, output_path: str) -> No
 
 def plot_number_of_runs_per_distance(activities_df: pd.DataFrame, output_path: str) -> None:
     """
-    5) Number of runs per distance:
-       - Bar graph showing grouped distances (<5 km, 5–10 km, etc.)
-       - Bars per year + an overall bar
+    Number of runs per distance:
+    - Bar graph showing grouped distances (<5 km, 5–10 km, etc.)
+    - Bars per year + an overall bar
     """
     if activities_df.empty:
         return
 
-    df = activities_df.copy()
-    df["distance_km"] = df["distance_m"] / 1000.0
-    df["year"] = pd.to_datetime(df["start_date_local"]).dt.year
+    distance_data = activities_df.copy()
+    distance_data["distance_km"] = distance_data["distance_m"] / 1000.0
+    distance_data["year"] = pd.to_datetime(distance_data["start_date_local"]).dt.year
 
     # Define bins for distance categories
     bins = [0, 5, 10, 15, 20, 25, 30, 9999]
     labels = ["<5", "5–10", "10–15", "15–20", "20–25", "25–30", "30+"]
-    df["dist_bin"] = pd.cut(df["distance_km"], bins=bins, labels=labels, include_lowest=True)
+    distance_data["distance_bin"] = pd.cut(
+        distance_data["distance_km"], bins=bins, labels=labels, include_lowest=True
+    )
 
-    # Count runs per bin
-    grouped = df.groupby(["dist_bin", "year"]).size().reset_index(name="count")
+    # Count runs per bin and year
+    grouped = distance_data.groupby(["distance_bin", "year"]).size().reset_index(name="count")
 
     plt.figure()
-    sns.barplot(
-        data=grouped,
-        x="dist_bin",
-        y="count",
-        hue="year",
-        errorbar=None
-    )
+    sns.barplot(data=grouped, x="distance_bin", y="count", hue="year", errorbar=None)
     plt.title("Number of Runs per Distance")
     plt.xlabel("Distance Range (km)")
     plt.ylabel("Count of Runs")
@@ -287,57 +385,118 @@ def plot_number_of_runs_per_distance(activities_df: pd.DataFrame, output_path: s
 
 def plot_fastest_1km_pace_over_time(splits_df: pd.DataFrame, output_path: str) -> None:
     """
-    6) Fastest 1km pace over time:
-       - x-axis: months (Jan–Dec)
-       - y-axis: 1 km pace (sec or min)
-       - Plot each year's fastest 1 km pace each month
-       - Trend line for each year
-       - If no runs in a month, assume pace is unchanged from prior data
+    Plots the fastest 1km pace per month across all years.
     """
     if splits_df.empty:
         return
 
-    # Filter splits to ~1 km if needed
-    df = splits_df.copy()
-    df["pace_sec_km"] = df["elapsed_time_s"]
-    df["year"] = pd.to_datetime(df["start_date_local"]).dt.year
-    df["month"] = pd.to_datetime(df["start_date_local"]).dt.month
+    split_data = splits_df.copy()
+    split_data["distance_km"] = split_data["distance_m"] / 1000.0
 
-    # Get fastest split each month/year
-    grouping = df.groupby(["year", "month"])["pace_sec_km"].min().reset_index()
+    # Filter ~1 km splits
+    split_data = split_data[
+        (split_data["distance_km"] >= 0.95) & (split_data["distance_km"] <= 1.05)
+    ]
+    if split_data.empty:
+        return
 
-    # Build a 12-month index for each year
-    all_years = grouping["year"].unique()
-    full_rows = []
-    for yr in all_years:
-        for m in range(1, 13):
-            sub = grouping[(grouping["year"] == yr) & (grouping["month"] == m)]
-            if not sub.empty:
-                pace_val = sub["pace_sec_km"].values[0]
-            else:
-                # If no data for that month, we'll keep it as NaN; later we can forward fill
-                pace_val = np.nan
-            full_rows.append({"year": yr, "month": m, "pace_sec_km": pace_val})
-    final_df = pd.DataFrame(full_rows)
-    # Forward fill the missing months
-    final_df["pace_sec_km"] = final_df.groupby("year")["pace_sec_km"].ffill()
+    split_data["pace_sec_km"] = split_data["elapsed_time_s"] / split_data["distance_km"]
+    split_data["year"] = pd.to_datetime(split_data["start_date_local"]).dt.year
+    split_data["month"] = pd.to_datetime(split_data["start_date_local"]).dt.month
+
+    monthly_fastest = split_data.groupby(["year", "month"])["pace_sec_km"].min().reset_index()
+
+    # Fill in missing months
+    all_years = sorted(monthly_fastest["year"].unique())
+    rows = []
+    for year in all_years:
+        for month in range(1, 13):
+            pace = monthly_fastest.loc[
+                (monthly_fastest["year"] == year) & (monthly_fastest["month"] == month),
+                "pace_sec_km",
+            ]
+            pace_val = pace.values[0] if not pace.empty else np.nan
+            rows.append({"year": year, "month": month, "pace_sec_km": pace_val})
+
+    plot_df = pd.DataFrame(rows)
+    plot_df["pace_sec_km"] = plot_df.groupby("year")["pace_sec_km"].ffill()
+
+    def format_pace(value, _):
+        minutes = int(value // 60)
+        seconds = int(value % 60)
+        return f"{minutes}:{seconds:02d}"
 
     plt.figure()
-    for yr in sorted(final_df["year"].unique()):
-        sub = final_df[final_df["year"] == yr].copy()
-        sub.sort_values("month", inplace=True)
-        plt.plot(
-            sub["month"],
-            sub["pace_sec_km"],
-            marker="o",
-            linestyle="-",
-            label=f"{yr}"
-        )
+    for year in sorted(plot_df["year"].unique()):
+        year_data = plot_df[plot_df["year"] == year].sort_values("month")
+        plt.plot(year_data["month"], year_data["pace_sec_km"], marker="o", label=str(year))
 
     plt.title("Fastest 1 km Pace Over Time")
     plt.xlabel("Month")
-    plt.ylabel("Fastest Pace (s/km)")
+    plt.ylabel("Fastest Pace (mm:ss)")
     plt.xticks(range(1, 13), calendar.month_abbr[1:13], rotation=45)
+    plt.gca().yaxis.set_major_formatter(ticker.FuncFormatter(format_pace))
+    plt.legend(title="Year")
+    plt.tight_layout()
+    plt.savefig(output_path)
+    plt.close()
+
+
+def plot_median_1km_pace_over_time(splits_df: pd.DataFrame, output_path: str) -> None:
+    """
+    Plots the median 1km pace per month across all years.
+    """
+    if splits_df.empty:
+        return
+
+    split_data = splits_df.copy()
+    split_data["distance_km"] = split_data["distance_m"] / 1000.0
+
+    # Filter ~1 km splits
+    split_data = split_data[
+        (split_data["distance_km"] >= 0.95) & (split_data["distance_km"] <= 1.05)
+    ]
+    if split_data.empty:
+        return
+
+    split_data["pace_sec_km"] = split_data["elapsed_time_s"] / split_data["distance_km"]
+    split_data["year"] = pd.to_datetime(split_data["start_date_local"]).dt.year
+    split_data["month"] = pd.to_datetime(split_data["start_date_local"]).dt.month
+
+    monthly_medians = split_data.groupby(["year", "month"])["pace_sec_km"].median().reset_index()
+
+    all_years = monthly_medians["year"].unique()
+    rows = []
+    for year in all_years:
+        for month in range(1, 13):
+            val = monthly_medians.loc[
+                (monthly_medians["year"] == year) & (monthly_medians["month"] == month),
+                "pace_sec_km",
+            ]
+            pace_val = val.values[0] if not val.empty else np.nan
+            rows.append({"year": year, "month": month, "pace_sec_km": pace_val})
+
+    plot_df = pd.DataFrame(rows)
+    plot_df["pace_sec_km"] = plot_df.groupby("year")["pace_sec_km"].ffill()
+
+    # Format function for y-axis (mm:ss)
+    def format_pace(value, _):
+        minutes = int(value // 60)
+        seconds = int(value % 60)
+        return f"{minutes}:{seconds:02d}"
+
+    plt.figure()
+    for year in sorted(plot_df["year"].unique()):
+        year_data = plot_df[plot_df["year"] == year].sort_values("month")
+        plt.plot(
+            year_data["month"], year_data["pace_sec_km"], marker="o", linestyle="-", label=str(year)
+        )
+
+    plt.title("Median 1 km Pace Over Time")
+    plt.xlabel("Month")
+    plt.ylabel("Median Pace (mm:ss)")
+    plt.xticks(range(1, 13), calendar.month_abbr[1:13], rotation=45)
+    plt.gca().yaxis.set_major_formatter(ticker.FuncFormatter(format_pace))
     plt.legend(title="Year")
     plt.tight_layout()
     plt.savefig(output_path)
@@ -346,31 +505,26 @@ def plot_fastest_1km_pace_over_time(splits_df: pd.DataFrame, output_path: str) -
 
 def plot_total_distance_by_month(activities_df: pd.DataFrame, output_path: str) -> None:
     """
-    7) Total distance run by month:
-       - x-axis: months (Jan–Dec)
-       - y-axis: total distance run (km)
-       - Separate line graph for each year
+    Total distance run by month:
+    - x-axis: months (Jan–Dec)
+    - y-axis: total distance run (km)
+    - Separate line graph for each year
     """
     if activities_df.empty:
         return
 
-    df = activities_df.copy()
-    df["distance_km"] = df["distance_m"] / 1000.0
-    df["year"] = pd.to_datetime(df["start_date_local"]).dt.year
-    df["month"] = pd.to_datetime(df["start_date_local"]).dt.month
+    activity_data = activities_df.copy()
+    activity_data["distance_km"] = activity_data["distance_m"] / 1000.0
+    activity_data["year"] = pd.to_datetime(activity_data["start_date_local"]).dt.year
+    activity_data["month"] = pd.to_datetime(activity_data["start_date_local"]).dt.month
 
-    monthly = df.groupby(["year", "month"])["distance_km"].sum().reset_index()
+    monthly_totals = activity_data.groupby(["year", "month"])["distance_km"].sum().reset_index()
 
     plt.figure()
-    for yr in sorted(monthly["year"].unique()):
-        sub = monthly[monthly["year"] == yr].copy()
-        sub.sort_values("month", inplace=True)
+    for year in sorted(monthly_totals["year"].unique()):
+        year_data = monthly_totals[monthly_totals["year"] == year].sort_values("month")
         plt.plot(
-            sub["month"],
-            sub["distance_km"],
-            marker="o",
-            linestyle="-",
-            label=str(yr)
+            year_data["month"], year_data["distance_km"], marker="o", linestyle="-", label=str(year)
         )
 
     plt.title("Total Distance Run by Month")
@@ -385,30 +539,41 @@ def plot_total_distance_by_month(activities_df: pd.DataFrame, output_path: str) 
 
 def plot_pace_by_day_of_week(splits_df: pd.DataFrame, output_path: str) -> None:
     """
-    8) Pace by Day of Week:
-       - y-axis: 1 km pace (sec, or min), x-axis: day of week
-       - Box plot or bar
+    Pace by Day of Week:
+    - y-axis: 1 km pace (mm:ss), x-axis: day of week
+    - Box plot filtered for ~1 km splits
     """
     if splits_df.empty:
         return
 
-    df = splits_df.copy()
-    df["pace_sec_km"] = df["elapsed_time_s"]
-    df["day_of_week"] = pd.to_datetime(df["start_date_local"]).dt.day_name()
+    split_data = splits_df.copy()
+    split_data["distance_km"] = split_data["distance_m"] / 1000.0
 
-    # Ensure consistent ordering from Monday...Sunday if desired
+    # Filter to ~1 km splits (0.95 to 1.05 km)
+    split_data = split_data[
+        (split_data["distance_km"] >= 0.95) & (split_data["distance_km"] <= 1.05)
+    ]
+    if split_data.empty:
+        return
+
+    split_data["pace_sec_km"] = split_data["elapsed_time_s"] / split_data["distance_km"]
+    split_data["day_of_week"] = pd.to_datetime(split_data["start_date_local"]).dt.day_name()
+
     ordered_days = list(calendar.day_name)
 
+    # Format function for y-axis (mm:ss)
+    def format_pace(value, _):
+        minutes = int(value // 60)
+        seconds = int(value % 60)
+        return f"{minutes}:{seconds:02d}"
+
     plt.figure()
-    sns.boxplot(
-        data=df,
-        x="day_of_week",
-        y="pace_sec_km",
-        order=ordered_days
-    )
+    axis = sns.boxplot(data=split_data, x="day_of_week", y="pace_sec_km", order=ordered_days)
+    axis.yaxis.set_major_formatter(ticker.FuncFormatter(format_pace))
+
     plt.title("Pace by Day of Week")
     plt.xlabel("Day of Week")
-    plt.ylabel("Pace (s/km)")
+    plt.ylabel("Pace (mm:ss)")
     plt.tight_layout()
     plt.savefig(output_path)
     plt.close()
@@ -416,27 +581,23 @@ def plot_pace_by_day_of_week(splits_df: pd.DataFrame, output_path: str) -> None:
 
 def plot_heatmap_activities(activities_df: pd.DataFrame, output_path: str) -> None:
     """
-    9) Heatmap of Activities by Day and Hour:
-       - x-axis: hour of day (0–23)
-       - y-axis: day of week
-       - cell = count of runs
+    Heatmap of Activities by Day and Hour:
+    - x-axis: hour of day (0–23)
+    - y-axis: day of week
+    - cell = count of runs
     """
     if activities_df.empty:
         return
 
-    df = activities_df.copy()
-    dt_col = pd.to_datetime(df["start_date_local"])
-    df["weekday"] = dt_col.dt.weekday  # Monday=0
-    df["hour"] = dt_col.dt.hour
+    activity_data = activities_df.copy()
+    dt_col = pd.to_datetime(activity_data["start_date_local"])
+    activity_data["weekday"] = dt_col.dt.weekday
+    activity_data["hour"] = dt_col.dt.hour
 
-    pivot = df.groupby(["weekday", "hour"]).size().unstack(fill_value=0)
+    pivot = activity_data.groupby(["weekday", "hour"]).size().unstack(fill_value=0)
 
     plt.figure()
-    sns.heatmap(
-        pivot,
-        cmap="YlGnBu",
-        cbar_kws={"label": "Count of Runs"}
-    )
+    sns.heatmap(pivot, cmap="YlGnBu", cbar_kws={"label": "Count of Runs"})
     plt.title("Heatmap of Activities by Day and Hour")
     plt.xlabel("Hour of Day")
     plt.ylabel("Day of Week")
@@ -452,48 +613,39 @@ def plot_heatmap_activities(activities_df: pd.DataFrame, output_path: str) -> No
 
 def plot_cumulative_distance_over_time(activities_df: pd.DataFrame, output_path: str) -> None:
     """
-    10) Cumulative distance over time:
-       - x-axis: month or date
-       - y-axis: cumulative distance (km)
-       - One line per year
+    Cumulative distance per month:
+    - x-axis: ['Jan', 'Feb', ..., 'Dec']
+    - y-axis: cumulative distance (km)
+    - Separate line per year
     """
     if activities_df.empty:
         return
 
-    df = activities_df.copy()
-    df["distance_km"] = df["distance_m"] / 1000.0
-    df["date"] = pd.to_datetime(df["start_date_local"])
-    df["year"] = df["date"].dt.year
-    df.sort_values("date", inplace=True)
+    activity_data = activities_df.copy()
+    activity_data["distance_km"] = activity_data["distance_m"] / 1000.0
+    activity_data["year"] = pd.to_datetime(activity_data["start_date_local"]).dt.year
+    activity_data["month"] = pd.to_datetime(activity_data["start_date_local"]).dt.month
 
-    # Group by year, then do a cumulative sum
-    out = []
-    for yr in sorted(df["year"].unique()):
-        sub = df[df["year"] == yr].copy()
-        sub.sort_values("date", inplace=True)
-        sub["cum_dist"] = sub["distance_km"].cumsum()
-        out.append(sub)
+    # Monthly aggregation
+    monthly_df = activity_data.groupby(["year", "month"])["distance_km"].sum().reset_index()
 
-    full = pd.concat(out)
-
+    # Prepare data for plotting with cumulative sums
     plt.figure()
-    for yr in sorted(full["year"].unique()):
-        year_df = full[full["year"] == yr]
-        plt.plot(
-            year_df["date"],
-            year_df["cum_dist"],
-            marker="o",
-            linestyle="-",
-            label=str(yr)
-        )
+    for year in sorted(monthly_df["year"].unique()):
+        sub = monthly_df[monthly_df["year"] == year].copy()
+        sub = sub.set_index("month").reindex(range(1, 13), fill_value=0).reset_index()
+        sub["cum_dist"] = sub["distance_km"].cumsum()
+        plt.plot(sub["month"], sub["cum_dist"], marker="o", label=str(year))
 
-    plt.title("Cumulative Distance Over Time")
-    plt.xlabel("Date")
-    plt.ylabel("Distance (km)")
+    plt.title("Cumulative Distance per Year")
+    plt.xlabel("Month")
+    plt.ylabel("Cumulative Distance (km)")
+    plt.xticks(
+        range(1, 13),
+        ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+        rotation=45,
+    )
     plt.legend(title="Year")
-    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter("%Y-%m"))
-    plt.xticks(rotation=45)
-
     plt.tight_layout()
     plt.savefig(output_path)
     plt.close()

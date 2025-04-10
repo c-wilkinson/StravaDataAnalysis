@@ -2,10 +2,14 @@
 Handles Strava OAuth token retrieval and refresh logic.
 """
 
+import json
 import time
 import requests
 from strava_data.config import get_client_id, get_client_secret
 from strava_data.db.dao import read_tokens, store_tokens
+from utils.logger import get_logger
+
+LOGGER = get_logger()
 
 
 def get_or_refresh_tokens() -> None:
@@ -16,18 +20,18 @@ def get_or_refresh_tokens() -> None:
     """
     tokens = read_tokens()
     if not tokens:
-        print("No tokens found in the database. Please obtain them initially.")
+        LOGGER.info("No tokens found in the database. Please obtain them initially.")
         return
 
     expires_at = tokens.get("expires_at", 0)
     if expires_at < time.time():
-        print("Tokens expired. Refreshing now.")
+        LOGGER.info("Tokens expired. Refreshing now.")
         refresh_token = tokens.get("refresh_token", "")
         new_tokens = refresh_strava_tokens(refresh_token)
         if new_tokens:
             store_tokens(new_tokens)
     else:
-        print("Tokens are still valid.")
+        LOGGER.info("Tokens are still valid.")
 
 
 def refresh_strava_tokens(refresh_token: str) -> dict:
@@ -45,14 +49,18 @@ def refresh_strava_tokens(refresh_token: str) -> dict:
         "refresh_token": refresh_token,
     }
 
+    payload_str = json.dumps(payload)
+    LOGGER.info(payload_str)
     try:
         response = requests.post(url, data=payload, timeout=10)
     except requests.exceptions.Timeout:
-        print("Token refresh request timed out.")
+        LOGGER.info("Token refresh request timed out.")
         return {}
 
     if response.ok:
         return response.json()
 
-    print("Failed to refresh tokens. Status:", response.status_code, "Response:", response.text)
+    LOGGER.info(
+        "Failed to refresh tokens. Status: %s Response: %s", response.status_code, response.text
+    )
     return {}

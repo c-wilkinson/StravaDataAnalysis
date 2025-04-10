@@ -1,0 +1,38 @@
+name: CodeTest
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  test-and-lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
+
+      - name: Install Poetry
+        uses: abatilo/actions-poetry@v2
+        with:
+          poetry-version: "1.7.1"
+
+      - name: Install dependencies
+        run: poetry install
+
+      - name: Run pylint
+        run: poetry run pylint src
+
+      - name: Check formatting with black
+        run: poetry run black --check src
+
+      - name: Run tests with pytest
+        run: poetry run pytest
