@@ -2,12 +2,25 @@
 Main entry point for running Strava data retrieval, processing, and visualization.
 """
 
+import pandas as pd
+
+from utils.logger import get_logger
 from strava_data.auth import get_or_refresh_tokens
-from strava_data.db.dao import decrypt_database, encrypt_database, init_database, insert_activities, insert_splits
+from strava_data.db.dao import (
+    decrypt_database,
+    encrypt_database,
+    init_database,
+    insert_activities,
+    insert_splits,
+    load_all_activities,
+    load_all_splits,
+)
+from strava_data.generate_readme import generate_readme
 from strava_data.strava_api.client import fetch_activities, fetch_splits_if_needed
 from strava_data.strava_api.processing.transform import transform_activities, transform_splits
 from strava_data.strava_api.visualisation import graphs
-import pandas as pd
+
+LOGGER = get_logger()
 
 
 def main() -> None:
@@ -18,24 +31,31 @@ def main() -> None:
     4. Transforms and stores them in the database.
     5. Generates the graphs using all data from the database.
     """
+    LOGGER.info("Start main.")
     decrypt_database()
     init_database()
     get_or_refresh_tokens()
 
     new_activities = fetch_activities(per_page=50)
     if not new_activities.empty:
-        # Fetch splits and combine them
+        LOGGER.info("New activities detected, processing...")
         new_splits = fetch_splits_if_needed(new_activities)
         transformed_activities = transform_activities(new_activities)
         transformed_splits = transform_splits(new_splits)
         insert_activities(transformed_activities)
         insert_splits(transformed_splits)
+        LOGGER.info("New activities processed")
+    else:
+        LOGGER.info("No new activities detected")
 
-    if not new_activities.empty:
-        generate_required_charts(transformed_activities, transformed_splits)
-    
+    all_activities = load_all_activities()
+    all_splits = load_all_splits()
+    generate_required_charts(all_activities, all_splits)
     encrypt_database()
-    print("Done.")
+    LOGGER.info("Generating readme.")
+    generate_readme()
+    LOGGER.info("Readme saved.")
+    LOGGER.info("Done.")
 
 
 def generate_required_charts(activities_df: pd.DataFrame, splits_df: pd.DataFrame) -> None:
@@ -46,11 +66,12 @@ def generate_required_charts(activities_df: pd.DataFrame, splits_df: pd.DataFram
     :param splits_df: DataFrame of 1 km splits from those activities.
     """
     graphs.plot_pace_vs_elevation_change(splits_df, "Running_Pace_vs_Elevation_Change.png")
-    graphs.plot_time_taken_over_distances(activities_df, splits_df, "Time_Taken_Distance.png")
+    graphs.plot_time_taken_over_distances(activities_df, "Time_Taken_Distance.png")
     graphs.plot_running_pace_over_time(splits_df, "Running_Pace_over_Time.png")
     graphs.plot_pace_vs_total_distance(splits_df, "Running_Pace_vs_Total_Distance.png")
     graphs.plot_number_of_runs_per_distance(activities_df, "Number_of_Runs_per_Distance.png")
     graphs.plot_fastest_1km_pace_over_time(splits_df, "Fastest_1k_Pace_over_Time.png")
+    graphs.plot_median_1km_pace_over_time(splits_df, "Median_1k_Pace_over_Time.png")
     graphs.plot_total_distance_by_month(activities_df, "Total_Distance_Ran_by_Month.png")
     graphs.plot_pace_by_day_of_week(splits_df, "Pace_by_Day.png")
     graphs.plot_heatmap_activities(activities_df, "Activity_Heatmap.png")

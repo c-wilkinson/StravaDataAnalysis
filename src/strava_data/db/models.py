@@ -8,9 +8,11 @@ from typing import Optional
 
 @dataclass
 class Activity:
+    # pylint: disable=too-many-instance-attributes
     """
     Represents a single Strava activity row.
     """
+
     activity_id: int
     name: str
     activity_type: str
@@ -25,9 +27,11 @@ class Activity:
 
 @dataclass
 class Split:
+    # pylint: disable=too-many-instance-attributes
     """
     Represents a single 1 km split from a Strava activity.
     """
+
     split_id: int
     activity_id: int
     distance_m: float
