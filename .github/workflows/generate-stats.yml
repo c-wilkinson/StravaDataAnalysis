@@ -24,9 +24,18 @@ jobs:
           pip install poetry
           poetry install
 
-      - name: Generate Stats and README
+      - name: Generate Stats
         run: |
           poetry run python src/main.py
+        env:
+          BUFFERSIZE: ${{ secrets.BUFFERSIZE }}
+          ENCRYPTIONPASSWORD: ${{ secrets.ENCRYPTIONPASSWORD }}
+          CLIENTID: ${{ secrets.CLIENTID }}
+          CLIENTSECRET: ${{ secrets.CLIENTSECRET }}
+          
+      - name: Generate README
+        run: |
+          poetry run python src/generate_readme.py
         env:
           BUFFERSIZE: ${{ secrets.BUFFERSIZE }}
           ENCRYPTIONPASSWORD: ${{ secrets.ENCRYPTIONPASSWORD }}
