@@ -7,6 +7,7 @@ import os
 import sqlite3
 from os import stat
 from typing import Any, Dict, Optional
+from datetime import datetime
 
 import pandas as pd
 import pyAesCrypt
@@ -18,10 +19,6 @@ LOGGER = get_logger()
 
 ENCRYPTED_DB_FILE = "strava.sqlite"
 TEMP_DB_FILE = "strava_temp.sqlite"
-
-CONFIG_TABLE = "config"
-ACTIVITIES_TABLE = "activities"
-SPLITS_TABLE = "splits"
 
 
 def decrypt_database() -> None:
@@ -85,8 +82,8 @@ def init_database() -> None:
     cur = conn.cursor()
 
     cur.execute(
-        f"""
-        CREATE TABLE IF NOT EXISTS {CONFIG_TABLE} (
+        """
+        CREATE TABLE IF NOT EXISTS config (
             token_type TEXT,
             access_token TEXT,
             expires_at INTEGER,
@@ -97,8 +94,8 @@ def init_database() -> None:
     )
 
     cur.execute(
-        f"""
-        CREATE TABLE IF NOT EXISTS {ACTIVITIES_TABLE} (
+        """
+        CREATE TABLE IF NOT EXISTS activities (
             activity_id INTEGER PRIMARY KEY,
             name TEXT,
             activity_type TEXT,
@@ -115,8 +112,8 @@ def init_database() -> None:
     )
 
     cur.execute(
-        f"""
-        CREATE TABLE IF NOT EXISTS {SPLITS_TABLE} (
+        """
+        CREATE TABLE IF NOT EXISTS splits (
             split_row_id INTEGER PRIMARY KEY AUTOINCREMENT,
             activity_id INTEGER,
             distance_m REAL,
@@ -128,7 +125,7 @@ def init_database() -> None:
             average_grade_adjusted_speed_m_s REAL,
             average_heartrate REAL,
             start_date_local TEXT,
-            FOREIGN KEY(activity_id) REFERENCES {ACTIVITIES_TABLE}(activity_id)
+            FOREIGN KEY(activity_id) REFERENCES activities(activity_id)
         );
     """
     )
@@ -140,10 +137,10 @@ def init_database() -> None:
 def store_tokens(tokens: Dict[str, Any]) -> None:
     conn = sqlite3.connect(TEMP_DB_FILE)
     cur = conn.cursor()
-    cur.execute(f"DELETE FROM {CONFIG_TABLE};")
+    cur.execute("DELETE FROM config;")
     cur.execute(
-        f"""
-        INSERT INTO {CONFIG_TABLE} (token_type, access_token, expires_at, expires_in, refresh_token)
+        """
+        INSERT INTO config (token_type, access_token, expires_at, expires_in, refresh_token)
         VALUES (?, ?, ?, ?, ?);
     """,
         (
@@ -162,9 +159,9 @@ def read_tokens() -> Optional[Dict[str, Any]]:
     conn = sqlite3.connect(TEMP_DB_FILE)
     cur = conn.cursor()
     cur.execute(
-        f"""
+        """
         SELECT token_type, access_token, expires_at, expires_in, refresh_token
-        FROM {CONFIG_TABLE}
+        FROM config
         LIMIT 1;
     """
     )
@@ -191,8 +188,8 @@ def insert_activities(activities_df: pd.DataFrame) -> None:
 
     for _, row in activities_df.iterrows():
         cur.execute(
-            f"""
-            INSERT OR IGNORE INTO {ACTIVITIES_TABLE} (
+            """
+            INSERT OR IGNORE INTO activities (
                 activity_id,
                 name,
                 activity_type,
@@ -234,8 +231,8 @@ def insert_splits(splits_df: pd.DataFrame) -> None:
 
     for _, row in splits_df.iterrows():
         cur.execute(
-            f"""
-            INSERT INTO {SPLITS_TABLE} (
+            """
+            INSERT INTO splits (
                 activity_id,
                 distance_m,
                 elapsed_time_s,
@@ -270,7 +267,7 @@ def insert_splits(splits_df: pd.DataFrame) -> None:
 def get_latest_activity_date() -> Optional[str]:
     conn = sqlite3.connect(TEMP_DB_FILE)
     cur = conn.cursor()
-    cur.execute(f"SELECT MAX(start_date_local) FROM {ACTIVITIES_TABLE};")
+    cur.execute("SELECT MAX(start_date_local) FROM activities;")
     row = cur.fetchone()
     conn.close()
 
@@ -281,13 +278,38 @@ def get_latest_activity_date() -> Optional[str]:
 
 def load_all_activities() -> pd.DataFrame:
     conn = sqlite3.connect(TEMP_DB_FILE)
-    activities_df = pd.read_sql_query(f"SELECT * FROM {ACTIVITIES_TABLE};", conn)
+    activities_df = pd.read_sql_query("SELECT * FROM activities;", conn)
     conn.close()
     return activities_df
 
 
 def load_all_splits() -> pd.DataFrame:
     conn = sqlite3.connect(TEMP_DB_FILE)
-    splits_df = pd.read_sql_query(f"SELECT * FROM {SPLITS_TABLE};", conn)
+    splits_df = pd.read_sql_query("SELECT * FROM splits;", conn)
     conn.close()
     return splits_df
+
+
+def get_last_run_time():
+    """
+    Retrieves the latest run timestamp from 'activities' in strava_temp.sqlite,
+    returning a datetime object or None if no runs exist.
+    """
+    if not os.path.exists(TEMP_DB_FILE):
+        return None
+
+    conn = sqlite3.connect(TEMP_DB_FILE)
+    cur = conn.cursor()
+
+    query = "SELECT MAX(start_date_local) FROM activities;"
+    cur.execute(query)
+    row = cur.fetchone()
+    conn.close()
+
+    if not row or not row[0]:
+        return None
+
+    try:
+        return datetime.strptime(row[0], "%Y-%m-%dT%H:%M:%SZ")
+    except ValueError:
+        return None
