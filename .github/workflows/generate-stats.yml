@@ -1,4 +1,5 @@
-name: GenerateStats
+name: Generate Stats and Update README
+
 on:
   schedule:
     - cron: '2,17,32,47 * * * *'
@@ -6,61 +7,33 @@ on:
 jobs:
   Stats:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
     steps:
-      - uses: actions/checkout@v4
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: 3.9 # For now, scipy doesn't appear to work in 3.10
+          python-version: "3.9"
+
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install numpy
-          pip install pandas
-          pip install pyAesCrypt
-          pip install python-dateutil
-          pip install seaborn
-          pip install matplotlib
-          pip install requests
-          pip install typing_extensions
-      - name: Get Data
-        env:
-          BUFFERSIZE: ${{ secrets.BUFFERSIZE }}
-          ENCRYPTIONPASSWORD: ${{ secrets.ENCRYPTIONPASSWORD }}
-          CLIENTID: ${{ secrets.CLIENTID }}
-          CLIENTSECRET: ${{ secrets.CLIENTSECRET }}
-        uses: nick-fields/retry@v3
-        with:
-              timeout_minutes: 5
-              max_attempts: 3        
-              command: python getData.py
-      - name: Process Data
-        env:
-          BUFFERSIZE: ${{ secrets.BUFFERSIZE }}
-          ENCRYPTIONPASSWORD: ${{ secrets.ENCRYPTIONPASSWORD }}
-          CLIENTID: ${{ secrets.CLIENTID }}
-          CLIENTSECRET: ${{ secrets.CLIENTSECRET }}
-        uses: nick-fields/retry@v3
-        with:
-              timeout_minutes: 5
-              max_attempts: 3        
-              command: python processData.py
-      - name: Upload Changes
-        if: always()
+          pip install poetry
+          poetry install
+
+      - name: Generate Stats and README
+        run: |
+          poetry run python src/main.py
+
+      - name: Commit and push changes
         run: |
           git config --global user.name 'GithubBot'
           git config --global user.email 'GithubBot@9bc0ff44ae664378ab0252851a8954ad.com'
           git remote set-url origin https://x-access-token:${{ secrets.TOKEN_GITHUB }}@github.com/${{ github.repository }}
           git diff-index --quiet HEAD || git commit --allow-empty -am "Automated changes"
           git push
-      - name: Create status check
         env:
-          GITHUB_TOKEN: ${{ secrets.TOKEN_GITHUB }}
-        run: |
-          BUILD_COMMIT=$(git rev-parse HEAD)
-          curl \
-          -X POST \
-          -H "Authorization: Bearer $GITHUB_TOKEN" \
-          -H "Accept: application/vnd.github.v3+json" \
-          https://api.github.com/repos/{org}/{repo}/check-runs \
-          -d '{"name":"build", "head_sha": "'"$BUILD_COMMIT"'", "status": "completed", "conclusion": "success" }'
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

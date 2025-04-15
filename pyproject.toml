@@ -1,0 +1,58 @@
+[tool.poetry]
+name = "strava_project"
+version = "0.1.0"
+description = "Codebase for Strava data analysis."
+authors = ["Craig Wilkinson"]
+readme = "README.md"
+packages = [{ include = "src" }]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+pandas = "^1.5"
+matplotlib = "^3.7"
+seaborn = "^0.12"
+requests = "^2.28"
+pyAesCrypt = "^6.0"
+numpy = "^1.24"
+
+[tool.poetry.group.dev.dependencies]
+pylint = "^2.17"
+pytest = "^7.3"
+black = "^24.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 100
+target-version = ['py39']
+include = 'src/.*\.pyi?$'
+exclude = '''
+/(
+    \.venv
+  | \.git
+  | \.mypy_cache
+  | \.pytest_cache
+  | \.tox
+  | \.eggs
+  | \.idea
+  | __pycache__
+  | build
+  | dist
+  | tests
+)/
+'''
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q"
+testpaths = ["src/tests"]
+
+[tool.pylint.'MAIN']
+max-line-length = 100
+disable = [
+    "missing-docstring",
+    "too-few-public-methods",
+    "too-many-arguments"
+]
