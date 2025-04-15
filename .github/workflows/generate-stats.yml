@@ -27,6 +27,11 @@ jobs:
       - name: Generate Stats and README
         run: |
           poetry run python src/main.py
+        env:
+          BUFFERSIZE: ${{ secrets.BUFFERSIZE }}
+          ENCRYPTIONPASSWORD: ${{ secrets.ENCRYPTIONPASSWORD }}
+          CLIENTID: ${{ secrets.CLIENTID }}
+          CLIENTSECRET: ${{ secrets.CLIENTSECRET }}
 
       - name: Commit and push changes
         run: |
