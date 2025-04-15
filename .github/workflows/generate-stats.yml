@@ -5,7 +5,7 @@ on:
     - cron: '2,17,32,47 * * * *'
   workflow_dispatch:
 jobs:
-  generate-readme:
+  Stats:
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -26,7 +26,7 @@ jobs:
 
       - name: Generate Stats and README
         run: |
-          poetry run python src/strava_data/generate_readme.py
+          poetry run python src/main.py
 
       - name: Commit and push changes
         run: |
