@@ -15,6 +15,34 @@ import seaborn as sns
 from strava_data.strava_api.visualisation.utils import configure_matplotlib_styles
 
 configure_matplotlib_styles()
+DOB = datetime.datetime(1985, 1, 26)
+
+
+def _classify_zone_dynamic(heart_rate: float, date_str: str) -> str:
+    """
+    Classify HR zone based on age at time of run.
+    :param heart_rate: average HR for a split
+    :param date_str: start_date_local (e.g. '2023-04-01T09:00:00Z')
+    :return: HR zone label (Z1–Z5)
+    """
+    try:
+        run_date = pd.to_datetime(date_str)
+    except (ValueError, TypeError):
+        return "Unknown"
+
+    age = run_date.year - DOB.year - ((run_date.month, run_date.day) < (DOB.month, DOB.day))
+    max_hr = 220 - age
+    heart_pct = heart_rate / max_hr
+
+    if heart_pct < 0.60:
+        return "Z1 (<60%)"
+    if heart_pct < 0.70:
+        return "Z2 (60–70%)"
+    if heart_pct < 0.80:
+        return "Z3 (70–80%)"
+    if heart_pct < 0.90:
+        return "Z4 (80–90%)"
+    return "Z5 (90–100%)"
 
 
 def _prepare_pace_distance_data(splits_df: pd.DataFrame) -> pd.DataFrame:
@@ -642,10 +670,271 @@ def plot_cumulative_distance_over_time(activities_df: pd.DataFrame, output_path:
     plt.ylabel("Cumulative Distance (km)")
     plt.xticks(
         range(1, 13),
-        ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+        calendar.month_abbr[1:13],
         rotation=45,
     )
     plt.legend(title="Year")
+    plt.tight_layout()
+    plt.savefig(output_path)
+    plt.close()
+
+
+def plot_longest_run_per_month(activities_df: pd.DataFrame, output_path: str) -> None:
+    """
+    Scatter plot of longest run per month across all years.
+    - X-axis: month (Jan–Dec)
+    - Y-axis: longest run (km)
+    - Points: one per year-month, only if a run occurred
+    - Colour-coded by year
+    """
+    if activities_df.empty:
+        return
+
+    data = activities_df.copy()
+    data["distance_km"] = data["distance_m"] / 1000.0
+    data["year"] = pd.to_datetime(data["start_date_local"]).dt.year
+    data["month"] = pd.to_datetime(data["start_date_local"]).dt.month
+
+    longest_per_month = data.groupby(["year", "month"])["distance_km"].max().reset_index()
+
+    plt.figure()
+    for year in sorted(longest_per_month["year"].unique()):
+        year_data = longest_per_month[longest_per_month["year"] == year]
+        plt.scatter(
+            year_data["month"],
+            year_data["distance_km"],
+            label=str(year),
+            alpha=0.7,
+            s=60,
+        )
+
+    plt.title("Longest Run per Month")
+    plt.xlabel("Month")
+    plt.ylabel("Distance (km)")
+    plt.xticks(range(1, 13), calendar.month_abbr[1:13])
+    plt.legend(title="Year")
+    plt.tight_layout()
+    plt.savefig(output_path)
+    plt.close()
+
+
+def plot_elevation_gain_per_km_by_month(activities_df: pd.DataFrame, output_path: str) -> None:
+    """
+    Plots average elevation gain per km for each month, per year.
+    - X-axis: Month (Jan–Dec)
+    - Y-axis: Elevation gain per km
+    - Line series: one per year
+    """
+    if activities_df.empty:
+        return
+
+    data = activities_df.copy()
+    data["distance_km"] = data["distance_m"] / 1000.0
+    data["year"] = pd.to_datetime(data["start_date_local"]).dt.year
+    data["month"] = pd.to_datetime(data["start_date_local"]).dt.month
+
+    monthly_stats = (
+        data.groupby(["year", "month"])
+        .agg({"distance_km": "sum", "total_elevation_gain_m": "sum"})
+        .reset_index()
+    )
+
+    # Avoid division by zero
+    monthly_stats = monthly_stats[monthly_stats["distance_km"] > 0]
+    monthly_stats["elev_gain_per_km"] = (
+        monthly_stats["total_elevation_gain_m"] / monthly_stats["distance_km"]
+    )
+
+    plt.figure()
+    for year in sorted(monthly_stats["year"].unique()):
+        year_data = monthly_stats[monthly_stats["year"] == year].sort_values("month")
+        plt.plot(year_data["month"], year_data["elev_gain_per_km"], marker="o", label=str(year))
+
+    plt.title("Elevation Gain per km by Month")
+    plt.xlabel("Month")
+    plt.ylabel("Elevation Gain (m/km)")
+    plt.xticks(range(1, 13), calendar.month_abbr[1:13])
+    plt.legend(title="Year")
+    plt.tight_layout()
+    plt.savefig(output_path)
+    plt.close()
+
+
+def plot_run_start_time_distribution(activities_df: pd.DataFrame, output_path: str) -> None:
+    """
+    Box plot showing distribution of run start times by month.
+    - X-axis: Month (Jan–Dec)
+    - Y-axis: Hour of day (0–23)
+    """
+    if activities_df.empty:
+        return
+
+    data = activities_df.copy()
+    data["start_time"] = pd.to_datetime(data["start_date_local"], errors="coerce")
+    data["month"] = data["start_time"].dt.month
+    data["hour"] = data["start_time"].dt.hour
+
+    if data[["month", "hour"]].dropna().empty:
+        return
+
+    plt.figure()
+    sns.boxplot(data=data, x="month", y="hour")
+    plt.title("Distribution of Run Start Time by Month")
+    plt.xlabel("Month")
+    plt.ylabel("Start Hour of Day")
+    plt.xticks(ticks=range(0, 12), labels=calendar.month_abbr[1:13])
+    plt.tight_layout()
+    plt.savefig(output_path)
+    plt.close()
+
+
+def plot_monthly_distance_by_year_grouped(activities_df: pd.DataFrame, output_path: str) -> None:
+    """
+    Clustered bar chart comparing total monthly distance by year.
+    - X-axis: Month (Jan–Dec)
+    - Y-axis: Total distance (km)
+    - Grouped by year
+    """
+    if activities_df.empty:
+        return
+
+    data = activities_df.copy()
+    data["distance_km"] = data["distance_m"] / 1000.0
+    data["year"] = pd.to_datetime(data["start_date_local"]).dt.year
+    data["month"] = pd.to_datetime(data["start_date_local"]).dt.month
+
+    grouped = data.groupby(["month", "year"])["distance_km"].sum().reset_index()
+
+    # Pivot for seaborn's barplot
+    pivot = grouped.pivot(index="month", columns="year", values="distance_km")
+    pivot = pivot.fillna(0)
+
+    pivot = pivot.sort_index()  # Ensure months are ordered 1-12
+    month_labels = [calendar.month_abbr[m] for m in pivot.index]
+
+    plt.figure(figsize=(12, 6))
+    pivot.plot(kind="bar", width=0.8)
+    plt.xticks(ticks=range(len(month_labels)), labels=month_labels, rotation=45)
+    plt.ylabel("Total Distance (km)")
+    plt.xlabel("Month")
+    plt.title("Year-over-Year Monthly Distance Comparison")
+    plt.legend(title="Year")
+    plt.tight_layout()
+    plt.savefig(output_path)
+    plt.close()
+
+
+def plot_rolling_distance(activities_df: pd.DataFrame, output_path: str, window: int = 30) -> None:
+    """
+    Line graph showing rolling X-day distance total.
+    Default window = 30 days.
+    """
+    if activities_df.empty:
+        return
+
+    data = activities_df.copy()
+    data["distance_km"] = data["distance_m"] / 1000.0
+    data["start_date"] = pd.to_datetime(data["start_date_local"])
+
+    # Sort by date
+    data = data.sort_values("start_date")
+
+    # Group by day and sum distances (in case of multiple runs per day)
+    daily = data.groupby("start_date")["distance_km"].sum().reset_index()
+
+    # Calculate rolling total
+    daily["rolling_distance_km"] = daily["distance_km"].rolling(window=window).sum()
+
+    plt.figure()
+    plt.plot(daily["start_date"], daily["rolling_distance_km"], color="blue", linewidth=2)
+    plt.title(f"Rolling {window}-Day Distance")
+    plt.xlabel("Date")
+    plt.ylabel("Distance (km)")
+    plt.grid(True)
+    plt.tight_layout()
+    plt.savefig(output_path)
+    plt.close()
+
+
+def plot_cadence_over_time(activities_df: pd.DataFrame, output_path: str) -> None:
+    """
+    Scatter plot of average cadence over time with trend line.
+    - Filters to activities with cadence > 0
+    """
+    if activities_df.empty:
+        return
+
+    data = activities_df.copy()
+    data["start_date"] = pd.to_datetime(data["start_date_local"])
+    data = data[data["average_cadence"] > 0].sort_values("start_date")
+
+    if data.empty:
+        return
+
+    data["start_date_num"] = mdates.date2num(data["start_date"])
+
+    plt.figure()
+    axis = plt.gca()
+
+    # Scatter plot
+    sns.scatterplot(data=data, x="start_date", y="average_cadence", alpha=0.5, ax=axis)
+
+    # Trend line
+    sns.regplot(
+        data=data,
+        x="start_date_num",
+        y="average_cadence",
+        scatter=False,
+        color="black",
+        line_kws={"linestyle": "--"},
+        ax=axis,
+    )
+
+    plt.title("Average Cadence Over Time")
+    plt.xlabel("Date")
+    plt.ylabel("Cadence (steps per minute)")
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    plt.savefig(output_path)
+    plt.close()
+
+
+def plot_heart_rate_zone_distribution(splits_df: pd.DataFrame, output_path: str) -> None:
+    """
+    Stacked bar chart showing time spent in heart rate zones per month.
+    Only includes ~1 km splits with valid heart rate data.
+    """
+    if splits_df.empty:
+        return
+
+    data = splits_df.copy()
+    data = data[(data["distance_m"] >= 950) & (data["distance_m"] <= 1050)]
+    data = data[pd.notnull(data["average_heartrate"])]
+
+    if data.empty:
+        return
+
+    data["year"] = pd.to_datetime(data["start_date_local"]).dt.year
+    data["month"] = pd.to_datetime(data["start_date_local"]).dt.month
+    data["month_label"] = data["year"].astype(str) + "-" + data["month"].astype(str).str.zfill(2)
+    data["hr_zone"] = data.apply(
+        lambda row: _classify_zone_dynamic(row["average_heartrate"], row["start_date_local"]),
+        axis=1,
+    )
+
+    # Total time spent per zone per month
+    data["time_min"] = data["elapsed_time_s"] / 60.0
+    grouped = data.groupby(["month_label", "hr_zone"])["time_min"].sum().unstack().fillna(0)
+
+    # Plot
+    grouped = grouped.sort_index()
+    grouped.plot(kind="bar", stacked=True, figsize=(14, 6), colormap="viridis")
+
+    plt.title("Training Intensity by Heart Rate Zone")
+    plt.xlabel("Month")
+    plt.ylabel("Time Spent (minutes)")
+    plt.xticks(rotation=45)
+    plt.legend(title="Heart Rate Zone")
     plt.tight_layout()
     plt.savefig(output_path)
     plt.close()

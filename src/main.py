@@ -76,6 +76,13 @@ def generate_required_charts(activities_df: pd.DataFrame, splits_df: pd.DataFram
     graphs.plot_pace_by_day_of_week(splits_df, "Pace_by_Day.png")
     graphs.plot_heatmap_activities(activities_df, "Activity_Heatmap.png")
     graphs.plot_cumulative_distance_over_time(activities_df, "Cumulative_Distance.png")
+    graphs.plot_longest_run_per_month(activities_df, "Longest_Run_per_Month.png")
+    graphs.plot_elevation_gain_per_km_by_month(activities_df, "Elevation_Gain_per_KM_by_Month.png")
+    graphs.plot_run_start_time_distribution(activities_df, "Run_Start_Time_by_Month.png")
+    graphs.plot_monthly_distance_by_year_grouped(activities_df, "Monthly_Distance_by_Year.png")
+    graphs.plot_rolling_distance(activities_df, "Rolling_30_Day_Comparison.png", window=30)
+    graphs.plot_cadence_over_time(activities_df, "Cadence_Over_Time.png")
+    graphs.plot_heart_rate_zone_distribution(splits_df, "Training_Intensity_by_HeartRate_Zone.png")
 
 
 if __name__ == "__main__":
