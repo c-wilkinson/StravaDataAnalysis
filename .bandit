@@ -1,0 +1,3 @@
+[bandit]
+# B105 - Not a hardcoded password, it's a secrets passed in
+skips = B105
