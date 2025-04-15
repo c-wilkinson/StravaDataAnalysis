@@ -3,12 +3,10 @@ Generates an updated README.md at the top-level of the repository.
 """
 
 import os
-import sqlite3
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
-from strava_data.db.dao import TEMP_DB_FILE, ACTIVITIES_TABLE
-from strava_data.db.dao import decrypt_database, encrypt_database
+from strava_data.db.dao import decrypt_database, encrypt_database, get_last_run_time
 from utils.logger import get_logger
 
 LOGGER = get_logger()
@@ -63,6 +61,9 @@ def generate_readme() -> None:
             "(https://app.codacy.com/gh/c-wilkinson/StravaDataAnalysis?"
             "utm_source=github.com&utm_medium=referral"
             "&utm_content=c-wilkinson/StravaDataAnalysis&utm_campaign=Badge_Grade)\n"
+            "[![CodeTest](https://github.com/c-wilkinson/StravaDataAnalysis/actions/workflows/"
+            "test-code.yml/badge.svg)]"
+            "(https://github.com/c-wilkinson/StravaDataAnalysis/actions/workflows/test-code.yml)\n"
             "[![GenerateStats](https://github.com/c-wilkinson/StravaDataAnalysis/actions/workflows/"
             "generate-stats.yml/badge.svg)]"
             "(https://github.com/c-wilkinson/StravaDataAnalysis/actions"
@@ -115,31 +116,6 @@ def generate_readme() -> None:
             "If the access_token has expired, it will refresh its tokens automatically "
             "during run time."
         )
-
-
-def get_last_run_time():
-    """
-    Retrieves the latest run timestamp from 'activities' in strava_temp.sqlite,
-    returning a datetime object or None if no runs exist.
-    """
-    if not os.path.exists(TEMP_DB_FILE):
-        return None
-
-    conn = sqlite3.connect(TEMP_DB_FILE)
-    cur = conn.cursor()
-
-    query = f"SELECT MAX(start_date_local) FROM {ACTIVITIES_TABLE};"
-    cur.execute(query)
-    row = cur.fetchone()
-    conn.close()
-
-    if not row or not row[0]:
-        return None
-
-    try:
-        return datetime.strptime(row[0], "%Y-%m-%dT%H:%M:%SZ")
-    except ValueError:
-        return None
 
 
 if __name__ == "__main__":
