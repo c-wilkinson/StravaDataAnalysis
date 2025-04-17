@@ -7,79 +7,15 @@ import datetime
 
 import matplotlib.dates as mdates
 from matplotlib import ticker
+from matplotlib.colors import ListedColormap, BoundaryNorm
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
 
-from strava_data.strava_api.visualisation.utils import configure_matplotlib_styles
+from strava_data.strava_api.visualisation import utils
 
-configure_matplotlib_styles()
-DOB = datetime.datetime(1985, 1, 26)
-
-
-def _classify_zone_dynamic(heart_rate: float, date_str: str) -> str:
-    """
-    Classify HR zone based on age at time of run.
-    :param heart_rate: average HR for a split
-    :param date_str: start_date_local (e.g. '2023-04-01T09:00:00Z')
-    :return: HR zone label (Z1–Z5)
-    """
-    try:
-        run_date = pd.to_datetime(date_str)
-    except (ValueError, TypeError):
-        return "Unknown"
-
-    age = run_date.year - DOB.year - ((run_date.month, run_date.day) < (DOB.month, DOB.day))
-    max_hr = 220 - age
-    heart_pct = heart_rate / max_hr
-
-    if heart_pct < 0.60:
-        return "Z1 (<60%)"
-    if heart_pct < 0.70:
-        return "Z2 (60–70%)"
-    if heart_pct < 0.80:
-        return "Z3 (70–80%)"
-    if heart_pct < 0.90:
-        return "Z4 (80–90%)"
-    return "Z5 (90–100%)"
-
-
-def _prepare_pace_distance_data(splits_df: pd.DataFrame) -> pd.DataFrame:
-    splits = splits_df.copy()
-    splits["pace_sec_km"] = splits["elapsed_time_s"] / (splits["distance_m"] / 1000)
-    grouped_df = (
-        splits.groupby(["activity_id", "start_date_local"])
-        .agg({"distance_m": "sum", "elapsed_time_s": "sum"})
-        .reset_index()
-    )
-    grouped_df["pace_sec_km"] = grouped_df["elapsed_time_s"] / (grouped_df["distance_m"] / 1000)
-    grouped_df["distance_km"] = grouped_df["distance_m"] / 1000
-    grouped_df["pace_sec"] = grouped_df["pace_sec_km"]
-    grouped_df["year"] = pd.to_datetime(grouped_df["start_date_local"]).dt.year
-    return grouped_df
-
-
-def _prepare_time_distance_data(activities_df: pd.DataFrame) -> pd.DataFrame:
-    """Cleans and augments data for time over distance plot."""
-    data = activities_df.copy()
-    data["distance_km"] = data["distance_m"] / 1000.0
-    data = data[data["distance_km"] >= 0.5]
-    data["time_seconds"] = data["moving_time_s"]
-    data["year"] = pd.to_datetime(data["start_date_local"]).dt.year
-    last_run_date = pd.to_datetime(data["start_date_local"]).max()
-    data["is_last_run"] = pd.to_datetime(data["start_date_local"]) == last_run_date
-    return data
-
-
-def _calculate_decay_point(data: pd.DataFrame) -> tuple[float, float]:
-    """Calculates decay distance and time for overall trend extension."""
-    max_distance = data["distance_km"].max()
-    max_time = data["time_seconds"].max()
-    decay_distance = max_distance + 2
-    average_pace = max_time / max_distance
-    decay_time = decay_distance * (average_pace + 180)
-    return decay_distance, decay_time
+utils.configure_matplotlib_styles()
 
 
 def plot_pace_vs_elevation_change(splits_df: pd.DataFrame, output_path: str) -> None:
@@ -109,12 +45,6 @@ def plot_pace_vs_elevation_change(splits_df: pd.DataFrame, output_path: str) -> 
     # Extract year
     splits["year"] = pd.to_datetime(splits["start_date_local"]).dt.year
 
-    # Format function for y-axis (mm:ss)
-    def format_pace(value, _):
-        minutes = int(value // 60)
-        seconds = int(value % 60)
-        return f"{minutes}:{seconds:02d}"
-
     plt.figure(figsize=(10, 6))
     sns.scatterplot(
         data=splits,
@@ -135,7 +65,7 @@ def plot_pace_vs_elevation_change(splits_df: pd.DataFrame, output_path: str) -> 
         ci=95,
     )
 
-    plt.gca().yaxis.set_major_formatter(ticker.FuncFormatter(format_pace))
+    plt.gca().yaxis.set_major_formatter(ticker.FuncFormatter(utils.format_pace))
     plt.ylabel("Split Pace (mm:ss)")
     plt.xlabel("Elevation Change (m)")
     plt.title("Running Pace vs. Elevation Change")
@@ -159,11 +89,11 @@ def plot_time_taken_over_distances(activities_df: pd.DataFrame, output_path: str
     if activities_df.empty:
         return
 
-    data = _prepare_time_distance_data(activities_df)
+    data = utils.prepare_time_distance_data(activities_df)
     if data.empty:
         return
 
-    decay_distance, decay_time = _calculate_decay_point(data)
+    decay_distance, decay_time = utils.calculate_decay_point(data)
 
     plt.figure()
     axis = plt.gca()
@@ -272,13 +202,6 @@ def plot_running_pace_over_time(splits_df: pd.DataFrame, output_path: str) -> No
     pace_data["date_numeric"] = mdates.date2num(pace_data["datetime_obj"])
     pace_data.sort_values("date_numeric", inplace=True)
 
-    def format_minutes_seconds(value, _):
-        if np.isnan(value):
-            return ""
-        minutes = int(value) // 60
-        seconds = int(value) % 60
-        return f"{minutes}:{seconds:02d}"
-
     plt.figure()
     axis = plt.gca()
     sns.scatterplot(data=pace_data, x="date_numeric", y="pace_sec_km", alpha=0.5)
@@ -295,7 +218,7 @@ def plot_running_pace_over_time(splits_df: pd.DataFrame, output_path: str) -> No
     axis.set_title("Running Pace Over Time")
     axis.set_xlabel("Date")
     axis.set_ylabel("Pace (mm:ss)")
-    axis.yaxis.set_major_formatter(ticker.FuncFormatter(format_minutes_seconds))
+    axis.yaxis.set_major_formatter(ticker.FuncFormatter(utils.format_pace))
     axis.xaxis.set_major_formatter(mdates.DateFormatter("%Y-%m"))
     plt.xticks(rotation=45)
     plt.tight_layout()
@@ -314,7 +237,7 @@ def plot_pace_vs_total_distance(splits_df: pd.DataFrame, output_path: str) -> No
     if splits_df.empty:
         return
 
-    data = _prepare_pace_distance_data(splits_df)
+    data = utils.prepare_pace_distance_data(splits_df)
     if data.empty:
         return
 
@@ -369,9 +292,7 @@ def plot_pace_vs_total_distance(splits_df: pd.DataFrame, output_path: str) -> No
     plt.title("Running Pace vs. Total Distance")
     plt.xlabel("Total Distance (km)")
     plt.ylabel("Average Pace (mm:ss per km)")
-    axis.yaxis.set_major_formatter(
-        plt.FuncFormatter(lambda val, _: f"{int(val // 60):02d}:{int(val % 60):02d}")
-    )
+    axis.yaxis.set_major_formatter(plt.FuncFormatter(utils.format_pace))
     plt.legend(title="Year")
     plt.tight_layout()
     plt.savefig(output_path)
@@ -449,11 +370,6 @@ def plot_fastest_1km_pace_over_time(splits_df: pd.DataFrame, output_path: str) -
     plot_df = pd.DataFrame(rows)
     plot_df["pace_sec_km"] = plot_df.groupby("year")["pace_sec_km"].ffill()
 
-    def format_pace(value, _):
-        minutes = int(value // 60)
-        seconds = int(value % 60)
-        return f"{minutes}:{seconds:02d}"
-
     plt.figure()
     for year in sorted(plot_df["year"].unique()):
         year_data = plot_df[plot_df["year"] == year].sort_values("month")
@@ -463,7 +379,7 @@ def plot_fastest_1km_pace_over_time(splits_df: pd.DataFrame, output_path: str) -
     plt.xlabel("Month")
     plt.ylabel("Fastest Pace (mm:ss)")
     plt.xticks(range(1, 13), calendar.month_abbr[1:13], rotation=45)
-    plt.gca().yaxis.set_major_formatter(ticker.FuncFormatter(format_pace))
+    plt.gca().yaxis.set_major_formatter(ticker.FuncFormatter(utils.format_pace))
     plt.legend(title="Year")
     plt.tight_layout()
     plt.savefig(output_path)
@@ -507,12 +423,6 @@ def plot_median_1km_pace_over_time(splits_df: pd.DataFrame, output_path: str) ->
     plot_df = pd.DataFrame(rows)
     plot_df["pace_sec_km"] = plot_df.groupby("year")["pace_sec_km"].ffill()
 
-    # Format function for y-axis (mm:ss)
-    def format_pace(value, _):
-        minutes = int(value // 60)
-        seconds = int(value % 60)
-        return f"{minutes}:{seconds:02d}"
-
     plt.figure()
     for year in sorted(plot_df["year"].unique()):
         year_data = plot_df[plot_df["year"] == year].sort_values("month")
@@ -524,7 +434,7 @@ def plot_median_1km_pace_over_time(splits_df: pd.DataFrame, output_path: str) ->
     plt.xlabel("Month")
     plt.ylabel("Median Pace (mm:ss)")
     plt.xticks(range(1, 13), calendar.month_abbr[1:13], rotation=45)
-    plt.gca().yaxis.set_major_formatter(ticker.FuncFormatter(format_pace))
+    plt.gca().yaxis.set_major_formatter(ticker.FuncFormatter(utils.format_pace))
     plt.legend(title="Year")
     plt.tight_layout()
     plt.savefig(output_path)
@@ -589,15 +499,9 @@ def plot_pace_by_day_of_week(splits_df: pd.DataFrame, output_path: str) -> None:
 
     ordered_days = list(calendar.day_name)
 
-    # Format function for y-axis (mm:ss)
-    def format_pace(value, _):
-        minutes = int(value // 60)
-        seconds = int(value % 60)
-        return f"{minutes}:{seconds:02d}"
-
     plt.figure()
     axis = sns.boxplot(data=split_data, x="day_of_week", y="pace_sec_km", order=ordered_days)
-    axis.yaxis.set_major_formatter(ticker.FuncFormatter(format_pace))
+    axis.yaxis.set_major_formatter(ticker.FuncFormatter(utils.format_pace))
 
     plt.title("Pace by Day of Week")
     plt.xlabel("Day of Week")
@@ -918,7 +822,7 @@ def plot_heart_rate_zone_distribution(splits_df: pd.DataFrame, output_path: str)
     data["month"] = pd.to_datetime(data["start_date_local"]).dt.month
     data["month_label"] = data["year"].astype(str) + "-" + data["month"].astype(str).str.zfill(2)
     data["hr_zone"] = data.apply(
-        lambda row: _classify_zone_dynamic(row["average_heartrate"], row["start_date_local"]),
+        lambda row: utils.classify_zone_dynamic(row["average_heartrate"], row["start_date_local"]),
         axis=1,
     )
 
@@ -935,6 +839,372 @@ def plot_heart_rate_zone_distribution(splits_df: pd.DataFrame, output_path: str)
     plt.ylabel("Time Spent (minutes)")
     plt.xticks(rotation=45)
     plt.legend(title="Heart Rate Zone")
+    plt.tight_layout()
+    plt.savefig(output_path)
+    plt.close()
+
+
+def plot_pace_variability_per_run(splits_df: pd.DataFrame, output_path: str) -> None:
+    """
+    Plots the standard deviation of pace (in sec/km) for each run over time.
+    Only includes activities with at least 3 ~1 km splits.
+    """
+    if splits_df.empty:
+        return
+
+    splits = splits_df.copy()
+    splits["distance_km"] = splits["distance_m"] / 1000
+    splits = splits[(splits["distance_km"] >= 0.95) & (splits["distance_km"] <= 1.05)]
+    if splits.empty:
+        return
+
+    splits["pace_sec_km"] = splits["elapsed_time_s"] / splits["distance_km"]
+
+    grouped = (
+        splits.groupby(["activity_id", "start_date_local"])
+        .agg(pace_std=("pace_sec_km", "std"), split_count=("pace_sec_km", "count"))
+        .reset_index()
+    )
+
+    # Filter to runs with at least 3 splits
+    grouped = grouped[grouped["split_count"] >= 3]
+    grouped["date"] = pd.to_datetime(grouped["start_date_local"])
+
+    if grouped.empty:
+        return
+
+    plt.figure()
+    axis = plt.gca()
+    sns.lineplot(data=grouped.sort_values("date"), x="date", y="pace_std", marker="o", ax=axis)
+
+    axis.yaxis.set_major_formatter(ticker.FuncFormatter(utils.format_pace))
+    axis.set_title("Pace Variability per Run (Standard Deviation)")
+    axis.set_xlabel("Date")
+    axis.set_ylabel("Pace Std Dev (mm:ss)")
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    plt.savefig(output_path)
+    plt.close()
+
+
+def plot_effort_score_over_time(activities_df: pd.DataFrame, output_path: str) -> None:
+    """
+    Line plot showing calculated effort score over time.
+    effort = (distance_km * 10) + (elevation_gain_m * 1.5)
+    """
+    if activities_df.empty:
+        return
+
+    data = activities_df.copy()
+    data["start_date"] = pd.to_datetime(data["start_date_local"])
+    data = data.sort_values("start_date")
+
+    data["distance_km"] = data["distance_m"] / 1000.0
+    data["effort_score"] = (data["distance_km"] * 10) + (data["total_elevation_gain_m"] * 1.5)
+
+    # Smooth with a rolling 7-day window to reduce noise
+    data["rolling_effort"] = data["effort_score"].rolling(window=7).mean()
+
+    plt.figure()
+    plt.plot(data["start_date"], data["rolling_effort"], label="7-day Avg Effort", color="blue")
+    plt.title("Training Load (Effort Score) Over Time")
+    plt.xlabel("Date")
+    plt.ylabel("Effort Score")
+    plt.grid(True)
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig(output_path)
+    plt.close()
+
+
+def plot_run_distance_distribution(activities_df: pd.DataFrame, output_path: str) -> None:
+    """
+    KDE plot showing distribution of run distances, split by year.
+    Highlights distance preferences and training evolution over time.
+    """
+    if activities_df.empty:
+        return
+
+    data = activities_df.copy()
+    data["distance_km"] = data["distance_m"] / 1000.0
+    data["year"] = pd.to_datetime(data["start_date_local"]).dt.year
+
+    plt.figure()
+    axis = plt.gca()
+
+    for year in sorted(data["year"].unique()):
+        year_data = data[data["year"] == year]
+        if year_data["distance_km"].nunique() > 1:
+            sns.kdeplot(year_data["distance_km"], fill=True, label=str(year), alpha=0.3, ax=axis)
+
+    axis.set_xlim(left=0)
+    axis.set_title("Run Distance Distribution by Year")
+    axis.set_xlabel("Distance (km)")
+    axis.set_ylabel("Density")
+    plt.legend(title="Year")
+    plt.grid(True, linestyle="--", linewidth=0.5)
+    plt.tight_layout()
+    plt.savefig(output_path)
+    plt.close()
+
+
+def plot_pace_distribution(splits_df: pd.DataFrame, output_path: str) -> None:
+    """
+    KDE plot showing distribution of paces (in mm:ss per km), one per year.
+    Only includes ~1 km splits.
+    """
+    if splits_df.empty:
+        return
+
+    data = splits_df.copy()
+    data["distance_km"] = data["distance_m"] / 1000.0
+    data = data[(data["distance_km"] >= 0.95) & (data["distance_km"] <= 1.05)]
+    if data.empty:
+        return
+
+    data["pace_sec_km"] = data["elapsed_time_s"] / data["distance_km"]
+    data["year"] = pd.to_datetime(data["start_date_local"]).dt.year
+
+    plt.figure()
+    axis = plt.gca()
+
+    for year in sorted(data["year"].unique()):
+        year_data = data[data["year"] == year]
+        if year_data["pace_sec_km"].nunique() > 1:
+            sns.kdeplot(year_data["pace_sec_km"], fill=True, label=str(year), alpha=0.3, ax=axis)
+
+    axis.xaxis.set_major_formatter(ticker.FuncFormatter(utils.format_pace))
+    axis.set_title("Pace Distribution by Year (1 km splits)")
+    axis.set_xlabel("Pace (mm:ss)")
+    axis.set_ylabel("Density")
+    plt.legend(title="Year")
+    plt.grid(True)
+    plt.tight_layout()
+    plt.savefig(output_path)
+    plt.close()
+
+
+def plot_elevation_gain_distribution(activities_df: pd.DataFrame, output_path: str) -> None:
+    """
+    KDE plots showing distribution of elevation gain per run, one per year.
+    Highlights how hilly your training was year-to-year.
+    """
+    if activities_df.empty:
+        return
+
+    data = activities_df.copy()
+    data["elevation_gain"] = data["total_elevation_gain_m"]
+    data = data[data["elevation_gain"] != 0]  # Filter out treadmill runs
+    data["year"] = pd.to_datetime(data["start_date_local"]).dt.year
+
+    plt.figure()
+    axis = plt.gca()
+
+    for year in sorted(data["year"].unique()):
+        year_data = data[data["year"] == year]
+        if year_data["elevation_gain"].nunique() > 1:
+            sns.kdeplot(year_data["elevation_gain"], fill=True, label=str(year), alpha=0.3, ax=axis)
+
+    axis.set_title("Elevation Gain per Run (by Year)")
+    axis.set_xlabel("Elevation Gain (m)")
+    axis.set_ylabel("Density")
+    plt.legend(title="Year")
+    plt.grid(True, linestyle="--", linewidth=0.5)
+    plt.tight_layout()
+    plt.savefig(output_path)
+    plt.close()
+
+
+def plot_run_days_heatmap(activities_df: pd.DataFrame, output_path: str) -> None:
+    """
+    Heatmap showing number of days with runs per month.
+    Highlights how consistently you trained.
+    """
+    if activities_df.empty:
+        return
+
+    data = activities_df.copy()
+    data["date"] = pd.to_datetime(data["start_date_local"]).dt.date
+    data["year"] = pd.to_datetime(data["start_date_local"]).dt.year
+    data["month"] = pd.to_datetime(data["start_date_local"]).dt.month
+
+    # Count unique run dates per month
+    run_days = data.drop_duplicates(subset="date")
+    summary = run_days.groupby(["year", "month"]).size().reset_index(name="run_day_count")
+    pivot = summary.pivot(index="year", columns="month", values="run_day_count")
+
+    plt.figure(figsize=(10, 6))
+    sns.heatmap(
+        pivot,
+        annot=pivot.notna(),  # Only annotate cells with data
+        fmt=".0f",
+        cmap="Greens",
+        cbar_kws={"label": "Run Days"},
+        mask=pivot.isna(),  # Hide non-existent cells
+    )
+    plt.title("Run Days per Month")
+    plt.xlabel("Month")
+    plt.ylabel("Year")
+    plt.xticks(ticks=np.arange(12) + 0.5, labels=calendar.month_abbr[1:13], rotation=45)
+    plt.tight_layout()
+    plt.savefig(output_path)
+    plt.close()
+
+
+def plot_rest_days_heatmap(activities_df: pd.DataFrame, output_path: str) -> None:
+    """
+    Heatmap showing number of rest days per month.
+    Only annotates months where rest days occurred.
+    """
+    if activities_df.empty:
+        return
+
+    data = activities_df.copy()
+    data["date"] = pd.to_datetime(data["start_date_local"]).dt.date
+
+    # Build full date range from first to last activity
+    start = data["date"].min()
+    end = data["date"].max()
+    full_dates = pd.DataFrame({"date": [d.date() for d in pd.date_range(start, end)]})
+
+    # Identify rest days
+    rest_days = full_dates[~full_dates["date"].isin(data["date"])].copy()
+    rest_days["year"] = pd.to_datetime(rest_days["date"]).dt.year
+    rest_days["month"] = pd.to_datetime(rest_days["date"]).dt.month
+
+    rest_summary = rest_days.groupby(["year", "month"]).size().reset_index(name="rest_day_count")
+    pivot = rest_summary.pivot(index="year", columns="month", values="rest_day_count")
+
+    plt.figure(figsize=(10, 6))
+    sns.heatmap(
+        pivot,
+        annot=pivot.notna(),  # Only annotate cells with data
+        fmt=".0f",
+        cmap="Reds",
+        cbar_kws={"label": "Rest Days"},
+        mask=pivot.isna(),  # Hide non-existent cells
+    )
+    plt.title("Rest Days per Month")
+    plt.xlabel("Month")
+    plt.ylabel("Year")
+    plt.xticks(ticks=np.arange(12) + 0.5, labels=calendar.month_abbr[1:13], rotation=45)
+    plt.tight_layout()
+    plt.savefig(output_path)
+    plt.close()
+
+
+def plot_run_rest_ratio_heatmap(activities_df: pd.DataFrame, output_path: str) -> None:
+    """
+    Heatmap showing the run:rest ratio per month with colour-coded zones:
+    - Green = Balanced (0.25–0.9)
+    - Red = High (overtraining)
+    - Yellow = Low (undertraining)
+    """
+    if activities_df.empty:
+        return
+
+    data = activities_df.copy()
+    data["date"] = pd.to_datetime(data["start_date_local"]).dt.date
+
+    start = data["date"].min()
+    end = data["date"].max()
+    all_dates = pd.DataFrame({"date": [d.date() for d in pd.date_range(start, end)]})
+    all_dates["year"] = pd.to_datetime(all_dates["date"]).dt.year
+    all_dates["month"] = pd.to_datetime(all_dates["date"]).dt.month
+
+    run_dates = data.drop_duplicates(subset="date")[["date"]].copy()
+    run_dates["ran"] = 1
+
+    merged = all_dates.merge(run_dates, on="date", how="left")
+    merged["ran"] = merged["ran"].fillna(0)
+
+    summary = (
+        merged.groupby(["year", "month"])["ran"]
+        .agg(run_days="sum", total_days="count")
+        .reset_index()
+    )
+    summary["run_rest_ratio"] = summary["run_days"] / summary["total_days"]
+    pivot = summary.pivot(index="year", columns="month", values="run_rest_ratio")
+
+    # Define color map:
+    #   0–0.25 (undertraining): yellow
+    #   0.25–0.9 (balanced): green
+    #   0.9–1.0 (overtraining): red
+    cmap = ListedColormap(["#FFD700", "#32CD32", "#FF6347"])  # yellow, green, tomato
+    bounds = [0, 0.25, 0.9, 1.0]
+    norm = BoundaryNorm(bounds, cmap.N)
+
+    plt.figure(figsize=(10, 6))
+    sns.heatmap(
+        pivot,
+        annot=pivot.notna(),
+        fmt=".2f",
+        cmap=cmap,
+        norm=norm,
+        cbar_kws={"label": "Run:Rest Ratio"},
+        mask=pivot.isna(),
+        linewidths=0.5,
+        linecolor="white",
+    )
+    plt.title("Run:Rest Ratio per Month")
+    plt.xlabel("Month")
+    plt.ylabel("Year")
+    plt.xticks(ticks=np.arange(12) + 0.5, labels=calendar.month_abbr[1:13], rotation=45)
+    plt.tight_layout()
+    plt.savefig(output_path)
+    plt.close()
+
+
+def plot_vo2_proxy_over_time(splits_df: pd.DataFrame, output_path: str) -> None:
+    """
+    Estimates a VO₂ max–style fitness proxy using 1 km split pace over time.
+
+    VO₂ proxy = 15.0 × (speed in m/s), where speed = distance / time for fastest split per month.
+
+    Produces a line chart per year showing how top-end aerobic fitness changes across months.
+    """
+    if splits_df.empty:
+        return
+
+    data = splits_df.copy()
+    data["distance_km"] = data["distance_m"] / 1000.0
+
+    # Focus on ~1 km splits
+    data = data[(data["distance_km"] >= 0.95) & (data["distance_km"] <= 1.05)]
+    if data.empty:
+        return
+
+    data["pace_sec_km"] = data["elapsed_time_s"] / data["distance_km"]
+    data["speed_mps"] = data["distance_m"] / data["elapsed_time_s"]
+    data["vo2_proxy"] = 15.0 * data["speed_mps"]
+    data["year"] = pd.to_datetime(data["start_date_local"]).dt.year
+    data["month"] = pd.to_datetime(data["start_date_local"]).dt.month
+
+    # Get fastest (highest VO2 proxy) split per month per year
+    monthly = data.groupby(["year", "month"])["vo2_proxy"].max().reset_index()
+
+    # Ensure we have all months filled (fill missing months with NaN)
+    rows = []
+    for year in sorted(monthly["year"].unique()):
+        for month in range(1, 13):
+            match = monthly[(monthly["year"] == year) & (monthly["month"] == month)]
+            value = match["vo2_proxy"].values[0] if not match.empty else np.nan
+            rows.append({"year": year, "month": month, "vo2_proxy": value})
+    plot_df = pd.DataFrame(rows)
+    plot_df["vo2_proxy"] = plot_df.groupby("year")["vo2_proxy"].ffill()
+
+    # Plotting
+    plt.figure()
+    for year in sorted(plot_df["year"].unique()):
+        sub = plot_df[plot_df["year"] == year]
+        plt.plot(sub["month"], sub["vo2_proxy"], marker="o", label=str(year))
+
+    plt.title("Estimated VO₂ Max Proxy Over Time")
+    plt.xlabel("Month")
+    plt.ylabel("VO₂ Proxy")
+    plt.xticks(range(1, 13), calendar.month_abbr[1:13], rotation=45)
+    plt.legend(title="Year")
+    plt.grid(True)
     plt.tight_layout()
     plt.savefig(output_path)
     plt.close()

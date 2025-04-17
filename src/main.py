@@ -2,6 +2,7 @@
 Main entry point for running Strava data retrieval, processing, and visualization.
 """
 
+import argparse
 import pandas as pd
 
 from utils.logger import get_logger
@@ -22,45 +23,63 @@ from strava_data.strava_api.visualisation import graphs
 LOGGER = get_logger()
 
 
-def main() -> None:
+def main(skip_fetch: bool = False) -> None:
     """
-    1. Authenticates or refreshes Strava tokens.
-    2. Initializes the database if needed.
-    3. Fetches new activities from Strava and their splits.
-    4. Transforms and stores them in the database.
-    5. Generates the graphs using all data from the database.
+    Orchestrates the full flow: auth, DB prep, fetch, transform, visualize.
     """
     LOGGER.info("Start main.")
     decrypt_database()
     init_database()
-    get_or_refresh_tokens()
 
-    new_activities = fetch_activities(per_page=50)
-    if not new_activities.empty:
-        LOGGER.info("New activities detected, processing...")
-        new_splits = fetch_splits_if_needed(new_activities)
-        transformed_activities = transform_activities(new_activities)
-        transformed_splits = transform_splits(new_splits)
-        insert_activities(transformed_activities)
-        insert_splits(transformed_splits)
-        LOGGER.info("New activities processed")
+    if not skip_fetch:
+        process_new_activities()
     else:
-        LOGGER.info("No new activities detected")
+        LOGGER.info("Skipping fetch. Using existing database contents.")
 
-    all_activities = load_all_activities()
-    all_splits = load_all_splits()
-    generate_required_charts(all_activities, all_splits)
+    generate_charts_from_db()
     encrypt_database()
     LOGGER.info("Done.")
 
 
+def process_new_activities() -> None:
+    """
+    Authenticates and processes newly fetched Strava activities and splits.
+    """
+    get_or_refresh_tokens()
+    new_activities = fetch_activities(per_page=50)
+
+    if new_activities.empty:
+        LOGGER.info("No new activities detected")
+        return
+
+    LOGGER.info("New activities detected, processing...")
+    new_splits = fetch_splits_if_needed(new_activities)
+    transformed_activities = transform_activities(new_activities)
+    transformed_splits = transform_splits(new_splits)
+    insert_activities(transformed_activities)
+    insert_splits(transformed_splits)
+    LOGGER.info("New activities processed")
+
+
+def generate_charts_from_db() -> None:
+    """
+    Loads all data from the database and triggers chart generation.
+    """
+    all_activities = load_all_activities()
+    all_splits = load_all_splits()
+    generate_required_charts(all_activities, all_splits)
+
+
 def generate_required_charts(activities_df: pd.DataFrame, splits_df: pd.DataFrame) -> None:
     """
-    Produces the charts from the specified DataFrames.
-
-    :param activities_df: DataFrame of Strava activities.
-    :param splits_df: DataFrame of 1 km splits from those activities.
+    Produces visualisations from activity and split data.
     """
+    generate_pace_and_distance_charts(activities_df, splits_df)
+    generate_distribution_and_heatmaps(activities_df, splits_df)
+    generate_time_series_and_trends(activities_df, splits_df)
+
+
+def generate_pace_and_distance_charts(activities_df: pd.DataFrame, splits_df: pd.DataFrame) -> None:
     LOGGER.info("Generate Running_Pace_vs_Elevation_Change")
     graphs.plot_pace_vs_elevation_change(splits_df, "Running_Pace_vs_Elevation_Change.png")
     LOGGER.info("Generate Time_Taken_Distance")
@@ -79,8 +98,28 @@ def generate_required_charts(activities_df: pd.DataFrame, splits_df: pd.DataFram
     graphs.plot_total_distance_by_month(activities_df, "Total_Distance_Ran_by_Month.png")
     LOGGER.info("Generate Pace_by_Day")
     graphs.plot_pace_by_day_of_week(splits_df, "Pace_by_Day.png")
+
+
+def generate_distribution_and_heatmaps(
+    activities_df: pd.DataFrame, splits_df: pd.DataFrame
+) -> None:
     LOGGER.info("Generate Activity_Heatmap")
     graphs.plot_heatmap_activities(activities_df, "Activity_Heatmap.png")
+    LOGGER.info("Generate Run_Distance_Distribution")
+    graphs.plot_run_distance_distribution(activities_df, "Run_Distance_Distribution.png")
+    LOGGER.info("Generate Pace_Distribution")
+    graphs.plot_pace_distribution(splits_df, "Pace_Distribution.png")
+    LOGGER.info("Generate Elevation_Gain_Distribution")
+    graphs.plot_elevation_gain_distribution(activities_df, "Elevation_Gain_Distribution.png")
+    LOGGER.info("Generate Run_Days_Heatmap")
+    graphs.plot_run_days_heatmap(activities_df, "Run_Days_Heatmap.png")
+    LOGGER.info("Generate Rest_Days_Heatmap")
+    graphs.plot_rest_days_heatmap(activities_df, "Rest_Days_Heatmap.png")
+    LOGGER.info("Generate Run_Rest_Ratio_Heatmap")
+    graphs.plot_run_rest_ratio_heatmap(activities_df, "Run_Rest_Ratio_Heatmap.png")
+
+
+def generate_time_series_and_trends(activities_df: pd.DataFrame, splits_df: pd.DataFrame) -> None:
     LOGGER.info("Generate Cumulative_Distance")
     graphs.plot_cumulative_distance_over_time(activities_df, "Cumulative_Distance.png")
     LOGGER.info("Generate Longest_Run_per_Month")
@@ -97,7 +136,16 @@ def generate_required_charts(activities_df: pd.DataFrame, splits_df: pd.DataFram
     graphs.plot_cadence_over_time(activities_df, "Cadence_Over_Time.png")
     LOGGER.info("Generate Training_Intensity_by_HeartRate_Zone")
     graphs.plot_heart_rate_zone_distribution(splits_df, "Training_Intensity_by_HeartRate_Zone.png")
+    LOGGER.info("Generate Pace_Consistency_by_Run")
+    graphs.plot_pace_variability_per_run(splits_df, "Pace_Consistency_by_Run.png")
+    LOGGER.info("Generate Training_Load_Over_Time")
+    graphs.plot_effort_score_over_time(activities_df, "Training_Load_Over_Time.png")
+    LOGGER.info("Generate VO2_Proxy_Over_Time")
+    graphs.plot_vo2_proxy_over_time(splits_df, "VO2_Proxy_Over_Time.png")
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description="Process and visualize Strava data.")
+    parser.add_argument("--skip-fetch", action="store_true", help="Skip fetching new activities.")
+    args = parser.parse_args()
+    main(skip_fetch=args.skip_fetch)
