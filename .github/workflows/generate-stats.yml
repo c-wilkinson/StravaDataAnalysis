@@ -19,10 +19,11 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Install Poetry
+        uses: abatilo/actions-poetry@v4
+
       - name: Install dependencies
-        run: |
-          pip install poetry
-          poetry install
+        run: poetry install
 
       - name: Generate Stats
         run: |
