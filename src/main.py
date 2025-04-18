@@ -18,8 +18,15 @@ from strava_data.db.dao import (
 )
 from strava_data.strava_api.client import fetch_activities, fetch_splits_if_needed
 from strava_data.strava_api.processing.transform import transform_activities, transform_splits
-from strava_data.strava_api.visualisation import graphs
+from strava_data.strava_api.visualisation import (
+    graphs_distribution,
+    graphs_distance,
+    graphs_pace,
+    graphs_effort,
+)
+from strava_data.strava_api.visualisation.utils import configure_matplotlib_styles
 
+configure_matplotlib_styles()
 LOGGER = get_logger()
 
 
@@ -81,67 +88,81 @@ def generate_required_charts(activities_df: pd.DataFrame, splits_df: pd.DataFram
 
 def generate_pace_and_distance_charts(activities_df: pd.DataFrame, splits_df: pd.DataFrame) -> None:
     LOGGER.info("Generate Running_Pace_vs_Elevation_Change")
-    graphs.plot_pace_vs_elevation_change(splits_df, "Running_Pace_vs_Elevation_Change.png")
+    graphs_pace.plot_pace_vs_elevation_change(splits_df, "Running_Pace_vs_Elevation_Change.png")
     LOGGER.info("Generate Time_Taken_Distance")
-    graphs.plot_time_taken_over_distances(activities_df, "Time_Taken_Distance.png")
+    graphs_distance.plot_time_taken_over_distances(activities_df, "Time_Taken_Distance.png")
     LOGGER.info("Generate Running_Pace_over_Time")
-    graphs.plot_running_pace_over_time(splits_df, "Running_Pace_over_Time.png")
+    graphs_pace.plot_running_pace_over_time(splits_df, "Running_Pace_over_Time.png")
     LOGGER.info("Generate Running_Pace_vs_Total_Distance")
-    graphs.plot_pace_vs_total_distance(splits_df, "Running_Pace_vs_Total_Distance.png")
+    graphs_distance.plot_pace_vs_total_distance(splits_df, "Running_Pace_vs_Total_Distance.png")
     LOGGER.info("Generate Number_of_Runs_per_Distance")
-    graphs.plot_number_of_runs_per_distance(activities_df, "Number_of_Runs_per_Distance.png")
+    graphs_distance.plot_number_of_runs_per_distance(
+        activities_df, "Number_of_Runs_per_Distance.png"
+    )
     LOGGER.info("Generate Fastest_1k_Pace_over_Time")
-    graphs.plot_fastest_1km_pace_over_time(splits_df, "Fastest_1k_Pace_over_Time.png")
+    graphs_pace.plot_fastest_1km_pace_over_time(splits_df, "Fastest_1k_Pace_over_Time.png")
     LOGGER.info("Generate Median_1k_Pace_over_Time")
-    graphs.plot_median_1km_pace_over_time(splits_df, "Median_1k_Pace_over_Time.png")
+    graphs_pace.plot_median_1km_pace_over_time(splits_df, "Median_1k_Pace_over_Time.png")
     LOGGER.info("Generate Total_Distance_Ran_by_Month")
-    graphs.plot_total_distance_by_month(activities_df, "Total_Distance_Ran_by_Month.png")
+    graphs_distance.plot_total_distance_by_month(activities_df, "Total_Distance_Ran_by_Month.png")
     LOGGER.info("Generate Pace_by_Day")
-    graphs.plot_pace_by_day_of_week(splits_df, "Pace_by_Day.png")
+    graphs_pace.plot_pace_by_day_of_week(splits_df, "Pace_by_Day.png")
 
 
 def generate_distribution_and_heatmaps(
     activities_df: pd.DataFrame, splits_df: pd.DataFrame
 ) -> None:
     LOGGER.info("Generate Activity_Heatmap")
-    graphs.plot_heatmap_activities(activities_df, "Activity_Heatmap.png")
+    graphs_distribution.plot_heatmap_activities(activities_df, "Activity_Heatmap.png")
     LOGGER.info("Generate Run_Distance_Distribution")
-    graphs.plot_run_distance_distribution(activities_df, "Run_Distance_Distribution.png")
+    graphs_distribution.plot_run_distance_distribution(
+        activities_df, "Run_Distance_Distribution.png"
+    )
     LOGGER.info("Generate Pace_Distribution")
-    graphs.plot_pace_distribution(splits_df, "Pace_Distribution.png")
+    graphs_distribution.plot_pace_distribution(splits_df, "Pace_Distribution.png")
     LOGGER.info("Generate Elevation_Gain_Distribution")
-    graphs.plot_elevation_gain_distribution(activities_df, "Elevation_Gain_Distribution.png")
+    graphs_distribution.plot_elevation_gain_distribution(
+        activities_df, "Elevation_Gain_Distribution.png"
+    )
     LOGGER.info("Generate Run_Days_Heatmap")
-    graphs.plot_run_days_heatmap(activities_df, "Run_Days_Heatmap.png")
+    graphs_distribution.plot_run_days_heatmap(activities_df, "Run_Days_Heatmap.png")
     LOGGER.info("Generate Rest_Days_Heatmap")
-    graphs.plot_rest_days_heatmap(activities_df, "Rest_Days_Heatmap.png")
+    graphs_distribution.plot_rest_days_heatmap(activities_df, "Rest_Days_Heatmap.png")
     LOGGER.info("Generate Run_Rest_Ratio_Heatmap")
-    graphs.plot_run_rest_ratio_heatmap(activities_df, "Run_Rest_Ratio_Heatmap.png")
+    graphs_distribution.plot_run_rest_ratio_heatmap(activities_df, "Run_Rest_Ratio_Heatmap.png")
 
 
 def generate_time_series_and_trends(activities_df: pd.DataFrame, splits_df: pd.DataFrame) -> None:
     LOGGER.info("Generate Cumulative_Distance")
-    graphs.plot_cumulative_distance_over_time(activities_df, "Cumulative_Distance.png")
+    graphs_distance.plot_cumulative_distance_over_time(activities_df, "Cumulative_Distance.png")
     LOGGER.info("Generate Longest_Run_per_Month")
-    graphs.plot_longest_run_per_month(activities_df, "Longest_Run_per_Month.png")
+    graphs_distance.plot_longest_run_per_month(activities_df, "Longest_Run_per_Month.png")
     LOGGER.info("Generate Elevation_Gain_per_KM_by_Month")
-    graphs.plot_elevation_gain_per_km_by_month(activities_df, "Elevation_Gain_per_KM_by_Month.png")
+    graphs_effort.plot_elevation_gain_per_km_by_month(
+        activities_df, "Elevation_Gain_per_KM_by_Month.png"
+    )
     LOGGER.info("Generate Run_Start_Time_by_Month")
-    graphs.plot_run_start_time_distribution(activities_df, "Run_Start_Time_by_Month.png")
+    graphs_distribution.plot_run_start_time_distribution(
+        activities_df, "Run_Start_Time_by_Month.png"
+    )
     LOGGER.info("Generate Monthly_Distance_by_Year")
-    graphs.plot_monthly_distance_by_year_grouped(activities_df, "Monthly_Distance_by_Year.png")
+    graphs_distance.plot_monthly_distance_by_year_grouped(
+        activities_df, "Monthly_Distance_by_Year.png"
+    )
     LOGGER.info("Generate Rolling_30_Day_Comparison")
-    graphs.plot_rolling_distance(activities_df, "Rolling_30_Day_Comparison.png", window=30)
+    graphs_distance.plot_rolling_distance(activities_df, "Rolling_30_Day_Comparison.png", window=30)
     LOGGER.info("Generate Cadence_Over_Time")
-    graphs.plot_cadence_over_time(activities_df, "Cadence_Over_Time.png")
+    graphs_effort.plot_cadence_over_time(activities_df, "Cadence_Over_Time.png")
     LOGGER.info("Generate Training_Intensity_by_HeartRate_Zone")
-    graphs.plot_heart_rate_zone_distribution(splits_df, "Training_Intensity_by_HeartRate_Zone.png")
+    graphs_distribution.plot_heart_rate_zone_distribution(
+        splits_df, "Training_Intensity_by_HeartRate_Zone.png"
+    )
     LOGGER.info("Generate Pace_Consistency_by_Run")
-    graphs.plot_pace_variability_per_run(splits_df, "Pace_Consistency_by_Run.png")
+    graphs_pace.plot_pace_variability_per_run(splits_df, "Pace_Consistency_by_Run.png")
     LOGGER.info("Generate Training_Load_Over_Time")
-    graphs.plot_effort_score_over_time(activities_df, "Training_Load_Over_Time.png")
+    graphs_effort.plot_effort_score_over_time(activities_df, "Training_Load_Over_Time.png")
     LOGGER.info("Generate VO2_Proxy_Over_Time")
-    graphs.plot_vo2_proxy_over_time(splits_df, "VO2_Proxy_Over_Time.png")
+    graphs_effort.plot_vo2_proxy_over_time(splits_df, "VO2_Proxy_Over_Time.png")
 
 
 if __name__ == "__main__":

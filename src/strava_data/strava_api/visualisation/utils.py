@@ -99,3 +99,59 @@ def calculate_decay_point(data: pd.DataFrame) -> tuple[float, float]:
     average_pace = max_time / max_distance
     decay_time = decay_distance * (average_pace + 180)
     return decay_distance, decay_time
+
+
+def seconds_to_hms(value, _):
+    """
+    Converts a numeric value (in seconds) to a HH:MM:SS formatted string.
+    """
+    return str(datetime.timedelta(seconds=int(value)))
+
+
+def save_and_close_plot(output_path: str) -> None:
+    """
+    Common helper to apply layout and save matplotlib plots.
+    """
+    plt.tight_layout()
+    plt.savefig(output_path)
+    plt.close()
+
+
+def extract_year_month(dataframe: pd.DataFrame) -> pd.DataFrame:
+    """
+    Adds 'year' and 'month' columns based on 'start_date_local'.
+    """
+    df = dataframe.copy()
+    df["year"] = pd.to_datetime(df["start_date_local"]).dt.year
+    df["month"] = pd.to_datetime(df["start_date_local"]).dt.month
+    return df
+
+
+def prepare_activities_with_distance(activities_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Copies and derives 'distance_km', 'year', 'month' from raw activities.
+    """
+    if activities_df.empty:
+        return pd.DataFrame()
+
+    df = activities_df.copy()
+    df["distance_km"] = df["distance_m"] / 1000.0
+    df = extract_year_month(df)
+    return df
+
+
+def prepare_1km_splits(splits_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Filters splits to ~1 km and adds 'distance_km' and 'year'.
+    """
+    if splits_df.empty:
+        return pd.DataFrame()
+
+    df = splits_df.copy()
+    df["distance_km"] = df["distance_m"] / 1000.0
+    df = df[(df["distance_km"] >= 0.95) & (df["distance_km"] <= 1.05)]
+    if df.empty:
+        return pd.DataFrame()
+
+    df["year"] = pd.to_datetime(df["start_date_local"]).dt.year
+    return df
