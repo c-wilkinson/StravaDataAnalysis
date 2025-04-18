@@ -19,8 +19,8 @@ else:
     # Fallback to environment variables
     BUFFER_SIZE = int(os.environ.get("BUFFERSIZE", 65536))  # default 64KB
     ENCRYPTION_PASSWORD = os.environ.get("ENCRYPTIONPASSWORD", "default_password")
-    CLIENT_ID = os.environ.get("CLIENT_ID", "")
-    CLIENT_SECRET = os.environ.get("CLIENT_SECRET", "")
+    CLIENT_ID = os.environ.get("CLIENTID", "")
+    CLIENT_SECRET = os.environ.get("CLIENTSECRET", "")
 
 
 def get_buffer_size() -> int:
