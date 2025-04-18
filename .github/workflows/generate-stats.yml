@@ -2,7 +2,7 @@ name: Generate Stats and Update README
 
 on:
   schedule:
-    - cron: '2,17,32,47 * * * *'
+    - cron: '2,17,32,47 1,4,7,10,13,16,19,22 * * *'
   workflow_dispatch:
 jobs:
   Stats:
@@ -28,6 +28,7 @@ jobs:
       - name: Generate Stats
         run: |
           poetry run python src/main.py
+        continue-on-error: true
         env:
           BUFFERSIZE: ${{ secrets.BUFFERSIZE }}
           ENCRYPTIONPASSWORD: ${{ secrets.ENCRYPTIONPASSWORD }}
@@ -37,6 +38,7 @@ jobs:
       - name: Generate README
         run: |
           poetry run python src/generate_readme.py
+        continue-on-error: true
         env:
           BUFFERSIZE: ${{ secrets.BUFFERSIZE }}
           ENCRYPTIONPASSWORD: ${{ secrets.ENCRYPTIONPASSWORD }}
