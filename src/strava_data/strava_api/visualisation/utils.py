@@ -2,7 +2,9 @@
 Utilities for chart styling or other shared visualisation helpers.
 """
 
+import calendar
 import datetime
+from typing import Callable
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -121,10 +123,10 @@ def extract_year_month(dataframe: pd.DataFrame) -> pd.DataFrame:
     """
     Adds 'year' and 'month' columns based on 'start_date_local'.
     """
-    df = dataframe.copy()
-    df["year"] = pd.to_datetime(df["start_date_local"]).dt.year
-    df["month"] = pd.to_datetime(df["start_date_local"]).dt.month
-    return df
+    data = dataframe.copy()
+    data["year"] = pd.to_datetime(data["start_date_local"]).dt.year
+    data["month"] = pd.to_datetime(data["start_date_local"]).dt.month
+    return data
 
 
 def prepare_activities_with_distance(activities_df: pd.DataFrame) -> pd.DataFrame:
@@ -134,10 +136,10 @@ def prepare_activities_with_distance(activities_df: pd.DataFrame) -> pd.DataFram
     if activities_df.empty:
         return pd.DataFrame()
 
-    df = activities_df.copy()
-    df["distance_km"] = df["distance_m"] / 1000.0
-    df = extract_year_month(df)
-    return df
+    data = activities_df.copy()
+    data["distance_km"] = data["distance_m"] / 1000.0
+    data = extract_year_month(data)
+    return data
 
 
 def prepare_1km_splits(splits_df: pd.DataFrame) -> pd.DataFrame:
@@ -147,11 +149,54 @@ def prepare_1km_splits(splits_df: pd.DataFrame) -> pd.DataFrame:
     if splits_df.empty:
         return pd.DataFrame()
 
-    df = splits_df.copy()
-    df["distance_km"] = df["distance_m"] / 1000.0
-    df = df[(df["distance_km"] >= 0.95) & (df["distance_km"] <= 1.05)]
-    if df.empty:
+    data = splits_df.copy()
+    data["distance_km"] = data["distance_m"] / 1000.0
+    data = data[(data["distance_km"] >= 0.95) & (data["distance_km"] <= 1.05)]
+    if data.empty:
         return pd.DataFrame()
 
-    df["year"] = pd.to_datetime(df["start_date_local"]).dt.year
-    return df
+    data["year"] = pd.to_datetime(data["start_date_local"]).dt.year
+    return data
+
+
+def plot_with_common_setup(
+    title: str, xlabel: str, ylabel: str, output_path: str, plot_func: Callable
+):
+    """
+    Reusable wrapper to set up common plot structure and call the provided plot_func.
+    """
+    plt.figure()
+    axis = plt.gca()
+    plot_func(axis)
+    plt.title(title)
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.grid(True)
+    save_and_close_plot(output_path)
+
+
+def prepare_dated_activities(activities_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Prepares an activities DataFrame for time series plotting.
+    """
+    if activities_df.empty:
+        return pd.DataFrame()
+    data = prepare_activities_with_distance(activities_df)
+    data["start_date"] = pd.to_datetime(data["start_date_local"])
+    return data.sort_values("start_date")
+
+
+def label_month_axis(axis):
+    """
+    Applies consistent x-axis formatting for month-based plots.
+    """
+    axis.set_xticks(range(1, 13))
+    axis.set_xticklabels(calendar.month_abbr[1:13], rotation=45)
+
+
+def label_month_axis_barplot(axis):
+    """
+    Applies consistent x-axis formatting for month-based (bar) plots.
+    """
+    axis.set_xticks(np.arange(12) + 0.5)
+    axis.set_xticklabels(calendar.month_abbr[1:13], rotation=45)
