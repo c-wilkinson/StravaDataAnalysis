@@ -28,8 +28,9 @@ def get_or_refresh_tokens() -> None:
         LOGGER.info("Tokens expired. Refreshing now.")
         refresh_token = tokens.get("refresh_token", "")
         new_tokens = refresh_strava_tokens(refresh_token)
-        if new_tokens:
-            store_tokens(new_tokens)
+        if not new_tokens:
+            raise RuntimeError("Token refresh failed")
+        store_tokens(new_tokens)
     else:
         LOGGER.info("Tokens are still valid.")
 

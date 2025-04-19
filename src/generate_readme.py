@@ -26,6 +26,7 @@ def generate_readme() -> None:
     LOGGER.info("Start generate_readme.")
     decrypt_database()
 
+    last_updated = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     last_run_time = get_last_run_time()
     time_string = "No runs found!"
     if last_run_time is not None:
@@ -75,7 +76,8 @@ def generate_readme() -> None:
             "codeql-analysis.yml)\n\n"
         )
         handle.write("## Generated Content\n")
-        handle.write(f"Last run was {time_string} ago!\n\n")
+        handle.write(f"📅 Stats last updated on: **{last_updated}**\n\n")
+        handle.write(f"🏃‍♂️ Most recent run: {time_string}\n\n")
 
         # Dynamically insert all PNG images
         image_files = sorted(f for f in os.listdir(readme_dir) if f.endswith(".png"))
