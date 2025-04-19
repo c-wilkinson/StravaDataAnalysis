@@ -11,13 +11,17 @@ If other people start using this, I'll try and streamline this process as much a
 [![CodeQL](https://github.com/c-wilkinson/StravaDataAnalysis/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/c-wilkinson/StravaDataAnalysis/actions/workflows/codeql-analysis.yml)
 
 ## Generated Content
-Last run was 0 years, 0 months, 2 days, 20 hours and 53 minutes ago!
+📅 Stats last updated on: **2025-04-19 16:30:56**
+
+🏃‍♂️ Most recent run: 0 years, 0 months, 2 days, 21 hours and 6 minutes
 
 ![Activity Heatmap](Activity_Heatmap.png?raw=true "Activity Heatmap")
 
 ![Cadence Over Time](Cadence_Over_Time.png?raw=true "Cadence Over Time")
 
 ![Cumulative Distance](Cumulative_Distance.png?raw=true "Cumulative Distance")
+
+![Elevation Gain Distribution](Elevation_Gain_Distribution.png?raw=true "Elevation Gain Distribution")
 
 ![Elevation Gain Per Km By Month](Elevation_Gain_per_KM_by_Month.png?raw=true "Elevation Gain Per Km By Month")
 
@@ -31,9 +35,21 @@ Last run was 0 years, 0 months, 2 days, 20 hours and 53 minutes ago!
 
 ![Number Of Runs Per Distance](Number_of_Runs_per_Distance.png?raw=true "Number Of Runs Per Distance")
 
+![Pace Consistency By Run](Pace_Consistency_by_Run.png?raw=true "Pace Consistency By Run")
+
+![Pace Distribution](Pace_Distribution.png?raw=true "Pace Distribution")
+
 ![Pace By Day](Pace_by_Day.png?raw=true "Pace By Day")
 
+![Rest Days Heatmap](Rest_Days_Heatmap.png?raw=true "Rest Days Heatmap")
+
 ![Rolling 30 Day Comparison](Rolling_30_Day_Comparison.png?raw=true "Rolling 30 Day Comparison")
+
+![Run Days Heatmap](Run_Days_Heatmap.png?raw=true "Run Days Heatmap")
+
+![Run Distance Distribution](Run_Distance_Distribution.png?raw=true "Run Distance Distribution")
+
+![Run Rest Ratio Heatmap](Run_Rest_Ratio_Heatmap.png?raw=true "Run Rest Ratio Heatmap")
 
 ![Run Start Time By Month](Run_Start_Time_by_Month.png?raw=true "Run Start Time By Month")
 
@@ -48,6 +64,10 @@ Last run was 0 years, 0 months, 2 days, 20 hours and 53 minutes ago!
 ![Total Distance Ran By Month](Total_Distance_Ran_by_Month.png?raw=true "Total Distance Ran By Month")
 
 ![Training Intensity By Heartrate Zone](Training_Intensity_by_HeartRate_Zone.png?raw=true "Training Intensity By Heartrate Zone")
+
+![Training Load Over Time](Training_Load_Over_Time.png?raw=true "Training Load Over Time")
+
+![Vo2 Proxy Over Time](VO2_Proxy_Over_Time.png?raw=true "Vo2 Proxy Over Time")
 
 ## Instructions
 As I'm sure is obvious, I'm teaching myself python as I go so the code quality is not likely to be great. Do with it as you wish.
