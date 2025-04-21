@@ -25,6 +25,7 @@ from strava_data.strava_api.visualisation import (
     graphs_effort,
 )
 from strava_data.strava_api.visualisation.utils import configure_matplotlib_styles
+from strava_data.ml.pace_forecast import run_forecast_pipeline
 
 configure_matplotlib_styles()
 LOGGER = get_logger()
@@ -44,6 +45,7 @@ def main(skip_fetch: bool = False) -> None:
         LOGGER.info("Skipping fetch. Using existing database contents.")
 
     generate_charts_from_db()
+    run_forecast_pipeline()
     encrypt_database()
     LOGGER.info("Done.")
 
