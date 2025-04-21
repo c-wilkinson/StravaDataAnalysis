@@ -9,7 +9,6 @@ from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import silhouette_score
 
-from strava_data.db.dao import load_all_splits
 from strava_data.ml.utils import prepare_pace_summary
 from strava_data.strava_api.visualisation.utils import (
     prepare_dated_activities,
@@ -104,12 +103,11 @@ def plot_run_type_distribution_by_year(data: pd.DataFrame, output_path: str) -> 
     save_and_close_plot(output_path)
 
 
-def run_clustering_pipeline():
+def run_clustering_pipeline(splits_df: pd.DataFrame) -> pd.DataFrame:
     """
     Runs the full clustering pipeline: feature prep, clustering, and visualisation.
     """
     LOGGER.info("Loading and building features...")
-    splits_df = load_all_splits()
     feature_data = build_run_features(splits_df)
 
     LOGGER.info("Running KMeans clustering...")
@@ -122,7 +120,3 @@ def run_clustering_pipeline():
     plot_run_type_distribution_by_year(clustered, "Run_Type_Distribution_By_Year.png")
 
     return clustered
-
-
-if __name__ == "__main__":
-    run_clustering_pipeline()

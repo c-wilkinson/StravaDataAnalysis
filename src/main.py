@@ -47,10 +47,6 @@ def main(skip_fetch: bool = False) -> None:
 
     LOGGER.info("Running chart generation...")
     generate_charts_from_db()
-    LOGGER.info("Running pace forecast pipeline...")
-    run_forecast_pipeline()
-    LOGGER.info("Running run type clustering pipeline...")
-    run_clustering_pipeline()
     encrypt_database()
     LOGGER.info("Done.")
 
@@ -82,6 +78,10 @@ def generate_charts_from_db() -> None:
     all_activities = load_all_activities()
     all_splits = load_all_splits()
     generate_required_charts(all_activities, all_splits)
+    LOGGER.info("Running pace forecast pipeline...")
+    run_forecast_pipeline(all_splits)
+    LOGGER.info("Running run type clustering pipeline...")
+    run_clustering_pipeline(all_splits)
 
 
 def generate_required_charts(activities_df: pd.DataFrame, splits_df: pd.DataFrame) -> None:

@@ -9,8 +9,6 @@ from sklearn.model_selection import TimeSeriesSplit, cross_val_score
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
-from strava_data.db.dao import load_all_splits
-from strava_data.ml.run_type_classifier import run_clustering_pipeline
 from strava_data.ml.utils import prepare_pace_summary
 from strava_data.strava_api.visualisation.utils import (
     prepare_dated_activities,
@@ -104,12 +102,11 @@ def plot_forecast(weekly_data: pd.DataFrame, forecast_value: float, output_path:
     save_and_close_plot(output_path)
 
 
-def run_forecast_pipeline():
+def run_forecast_pipeline(splits_df: pd.DataFrame) -> None:
     """
     Orchestrates weekly pace forecast: feature prep, training, prediction, plotting.
     """
     LOGGER.info("Building features from splits...")
-    splits_df = load_all_splits()
     weekly_data = build_weekly_pace_features(splits_df)
 
     LOGGER.info("Training forecast model...")
@@ -121,10 +118,3 @@ def run_forecast_pipeline():
 
     LOGGER.info("Generating forecast chart...")
     plot_forecast(weekly_data, forecast_value, "Forecast_Weekly_Pace.png")
-
-    LOGGER.info("Running run type clustering...")
-    run_clustering_pipeline()
-
-
-if __name__ == "__main__":
-    run_forecast_pipeline()
