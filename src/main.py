@@ -26,6 +26,7 @@ from strava_data.strava_api.visualisation import (
 )
 from strava_data.strava_api.visualisation.utils import configure_matplotlib_styles
 from strava_data.ml.pace_forecast import run_forecast_pipeline
+from strava_data.ml.run_type_classifier import run_clustering_pipeline
 
 configure_matplotlib_styles()
 LOGGER = get_logger()
@@ -44,8 +45,12 @@ def main(skip_fetch: bool = False) -> None:
     else:
         LOGGER.info("Skipping fetch. Using existing database contents.")
 
+    LOGGER.info("Running chart generation...")
     generate_charts_from_db()
+    LOGGER.info("Running pace forecast pipeline...")
     run_forecast_pipeline()
+    LOGGER.info("Running run type clustering pipeline...")
+    run_clustering_pipeline()
     encrypt_database()
     LOGGER.info("Done.")
 

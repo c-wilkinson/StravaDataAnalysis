@@ -3,7 +3,6 @@ Machine learning to forecast pace
 """
 
 import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.linear_model import Ridge
 from sklearn.model_selection import TimeSeriesSplit, cross_val_score
@@ -11,6 +10,8 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
 from strava_data.db.dao import load_all_splits
+from strava_data.ml.run_type_classifier import run_clustering_pipeline
+from strava_data.ml.utils import prepare_pace_summary
 from strava_data.strava_api.visualisation.utils import (
     prepare_dated_activities,
     format_pace,
@@ -20,32 +21,20 @@ from utils.logger import get_logger
 
 LOGGER = get_logger()
 
+
 def build_weekly_pace_features(splits_df: pd.DataFrame) -> pd.DataFrame:
     """
     Aggregates ~1 km splits into weekly median pace and rolling stats.
     """
     data = prepare_dated_activities(splits_df)
-    data = data[(data["distance_m"] >= 950) & (data["distance_m"] <= 1050)]
     data["start_date"] = pd.to_datetime(data["start_date_local"]).dt.tz_localize(None)
     data["week"] = data["start_date"].dt.to_period("W").apply(lambda r: r.start_time)
-    data["pace_sec_km"] = data["elapsed_time_s"] / (data["distance_m"] / 1000)
+    summary = prepare_pace_summary(data, group_cols=["week"])
 
-    grouped = (
-        data.groupby("week")
-        .agg(
-            pace_median=("pace_sec_km", "median"),
-            pace_std=("pace_sec_km", "std"),
-            split_count=("pace_sec_km", "count"),
-        )
-        .reset_index()
-        .dropna()
-    )
+    summary["pace_7d_avg"] = summary["pace_median"].rolling(window=2).mean()
+    summary["pace_7d_std"] = summary["pace_median"].rolling(window=2).std()
+    return summary.dropna()
 
-    grouped["pace_7d_avg"] = grouped["pace_median"].rolling(window=2).mean()
-    grouped["pace_7d_std"] = grouped["pace_median"].rolling(window=2).std()
-    grouped = grouped.dropna()
-
-    return grouped
 
 def train_forecast_model(data: pd.DataFrame):
     """
@@ -65,6 +54,7 @@ def train_forecast_model(data: pd.DataFrame):
     model.fit(features, target)
     return model
 
+
 def predict_next_week(model, latest_row: pd.Series):
     """
     Uses trained model to predict next week's average pace.
@@ -75,6 +65,7 @@ def predict_next_week(model, latest_row: pd.Series):
     seconds = int(predicted_pace % 60)
     LOGGER.info("Forecasted pace for next week: %d:%02d per km", minutes, seconds)
     return predicted_pace
+
 
 def plot_forecast(weekly_data: pd.DataFrame, forecast_value: float, output_path: str) -> None:
     """
@@ -88,16 +79,11 @@ def plot_forecast(weekly_data: pd.DataFrame, forecast_value: float, output_path:
     model = Pipeline([("scale", StandardScaler()), ("ridge", Ridge(alpha=1.0))])
     model.fit(feature_values, true_values)
     residuals = true_values - model.predict(feature_values)
-    rmse = np.sqrt(np.mean(residuals**2))
+    rmse = residuals.std()
 
     forecast_week = weekly_data["week"].max() + pd.Timedelta(weeks=1)
     plt.scatter(
-        forecast_week,
-        forecast_value,
-        marker="x",
-        color="red",
-        s=100,
-        label="Forecast Next Week"
+        forecast_week, forecast_value, marker="x", color="red", s=100, label="Forecast Next Week"
     )
 
     plt.fill_between(
@@ -117,6 +103,7 @@ def plot_forecast(weekly_data: pd.DataFrame, forecast_value: float, output_path:
     plt.grid(True)
     save_and_close_plot(output_path)
 
+
 def run_forecast_pipeline():
     """
     Orchestrates weekly pace forecast: feature prep, training, prediction, plotting.
@@ -134,6 +121,10 @@ def run_forecast_pipeline():
 
     LOGGER.info("Generating forecast chart...")
     plot_forecast(weekly_data, forecast_value, "Forecast_Weekly_Pace.png")
+
+    LOGGER.info("Running run type clustering...")
+    run_clustering_pipeline()
+
 
 if __name__ == "__main__":
     run_forecast_pipeline()
