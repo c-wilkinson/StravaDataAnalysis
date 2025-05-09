@@ -8,11 +8,10 @@ Generates a weekly training recommendation chart based on recent Strava activity
 - Outputs a visual table chart: Suggested_Training_Week.png
 """
 
+from collections import Counter
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.table import Table
-from collections import Counter
-from datetime import datetime, timedelta
 
 from strava_data.strava_api.visualisation.utils import (
     prepare_dated_activities,
@@ -63,7 +62,6 @@ def generate_training_plan_chart(
         high = pace * (1 + tolerance)
         return f"{format_pace(low, None)} – {format_pace(high, None)}"
 
-    ideal_mix = ["Long", "Tempo", "Intervals", "Recovery"]
     weekly_counts = recent_data.groupby(recent_data["start_date"].dt.isocalendar().week).size()
     average_weekly_runs = int(round(weekly_counts.mean() + 0.5))
     max_recommendations = max(3, min(5, average_weekly_runs))
@@ -123,29 +121,29 @@ def generate_training_plan_chart(
 
     recommendations = recommendations[:max_recommendations]  # cap number of runs
     full_week = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-    assigned = dict()
+    assigned = {}
     used_days = set()
     previous_day = None
-    for i, rec in enumerate(recommendations):
-        for d in preferred_days:
-            if d in used_days:
+    for _, rec in enumerate(recommendations):
+        for day_candidate in preferred_days:
+            if day_candidate in used_days:
                 continue
             if previous_day is not None:
-                current_idx = full_week.index(d)
+                current_idx = full_week.index(day_candidate)
                 previous_idx = full_week.index(previous_day)
                 if abs(current_idx - previous_idx) in (0, 1):
                     if rec["type"] not in ("Recovery", "Easy") and assigned[previous_day][
                         "type"
                     ] not in ("Recovery", "Easy"):
                         continue  # avoid hard sessions back-to-back
-            assigned[d] = rec
-            used_days.add(d)
-            previous_day = d
+            assigned[day_candidate] = rec
+            used_days.add(day_candidate)
+            previous_day = day_candidate
             break
 
-    fig, ax = plt.subplots(figsize=(12, len(full_week) * 0.8))
-    ax.axis("off")
-    table = Table(ax, bbox=[0, 0, 1, 1])
+    _, plot_axis = plt.subplots(figsize=(12, len(full_week) * 0.8))
+    plot_axis.axis("off")
+    table = Table(plot_axis, bbox=[0, 0, 1, 1])
     col_labels = ["Day", "Run Type", "Distance", "Pace", "Intensity", "Reason"]
     cell_text = []
     for day in full_week:
@@ -169,6 +167,6 @@ def generate_training_plan_chart(
                 loc="center",
                 facecolor="#f0f0f0" if row_idx == 0 else "white",
             )
-    ax.add_table(table)
+    plot_axis.add_table(table)
     plt.title("Suggested Training Plan (Next Week)", fontsize=14)
     save_and_close_plot(output_path)
