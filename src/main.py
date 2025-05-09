@@ -84,7 +84,7 @@ def generate_charts_from_db() -> None:
     LOGGER.info("Running run type clustering pipeline...")
     run_clustering_pipeline(all_splits)
     LOGGER.info("Generating training plan...")
-    generate_training_plan_chart(all_activities, all_splits, "A.I._Recommended_Training.png.png")
+    generate_training_plan_chart(all_activities, all_splits, "A.I._Recommended_Training.png")
 
 
 def generate_required_charts(activities_df: pd.DataFrame, splits_df: pd.DataFrame) -> None:
