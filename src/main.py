@@ -27,6 +27,7 @@ from strava_data.strava_api.visualisation import (
 from strava_data.strava_api.visualisation.utils import configure_matplotlib_styles
 from strava_data.ml.pace_forecast import run_forecast_pipeline
 from strava_data.ml.run_type_classifier import run_clustering_pipeline
+from strava_data.ml.training_advisor import generate_training_plan_chart
 
 configure_matplotlib_styles()
 LOGGER = get_logger()
@@ -82,6 +83,8 @@ def generate_charts_from_db() -> None:
     run_forecast_pipeline(all_splits)
     LOGGER.info("Running run type clustering pipeline...")
     run_clustering_pipeline(all_splits)
+    LOGGER.info("Generating training plan...")
+    generate_training_plan_chart(all_activities, all_splits, "A.I._Recommended_Training.png.png")
 
 
 def generate_required_charts(activities_df: pd.DataFrame, splits_df: pd.DataFrame) -> None:
