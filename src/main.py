@@ -25,6 +25,9 @@ from strava_data.strava_api.visualisation import (
     graphs_effort,
 )
 from strava_data.strava_api.visualisation.utils import configure_matplotlib_styles
+from strava_data.ml.pace_forecast import run_forecast_pipeline
+from strava_data.ml.run_type_classifier import run_clustering_pipeline
+from strava_data.ml.training_advisor import generate_training_plan_chart
 
 configure_matplotlib_styles()
 LOGGER = get_logger()
@@ -43,6 +46,7 @@ def main(skip_fetch: bool = False) -> None:
     else:
         LOGGER.info("Skipping fetch. Using existing database contents.")
 
+    LOGGER.info("Running chart generation...")
     generate_charts_from_db()
     encrypt_database()
     LOGGER.info("Done.")
@@ -75,6 +79,12 @@ def generate_charts_from_db() -> None:
     all_activities = load_all_activities()
     all_splits = load_all_splits()
     generate_required_charts(all_activities, all_splits)
+    LOGGER.info("Running pace forecast pipeline...")
+    run_forecast_pipeline(all_splits)
+    LOGGER.info("Running run type clustering pipeline...")
+    run_clustering_pipeline(all_splits)
+    LOGGER.info("Generating training plan...")
+    generate_training_plan_chart(all_activities, all_splits, "A.I._Recommended_Training.png")
 
 
 def generate_required_charts(activities_df: pd.DataFrame, splits_df: pd.DataFrame) -> None:
