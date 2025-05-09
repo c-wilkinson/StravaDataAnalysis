@@ -11,9 +11,11 @@ If other people start using this, I'll try and streamline this process as much a
 [![CodeQL](https://github.com/c-wilkinson/StravaDataAnalysis/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/c-wilkinson/StravaDataAnalysis/actions/workflows/codeql-analysis.yml)
 
 ## Generated Content
-📅 Stats last updated on: **2025-05-09 16:53:27**
+📅 Stats last updated on: **2025-05-09 18:21:40**
 
-🏃‍♂️ Most recent run: 0 years, 0 months, 1 days, 22 hours and 55 minutes
+🏃‍♂️ Most recent run: 0 years, 0 months, 2 days, 0 hours and 23 minutes
+
+![A.I. Recommended Training](A.I._Recommended_Training.png?raw=true "A.I. Recommended Training")
 
 ![Activity Heatmap](Activity_Heatmap.png?raw=true "Activity Heatmap")
 
@@ -26,6 +28,8 @@ If other people start using this, I'll try and streamline this process as much a
 ![Elevation Gain Per Km By Month](Elevation_Gain_per_KM_by_Month.png?raw=true "Elevation Gain Per Km By Month")
 
 ![Fastest 1K Pace Over Time](Fastest_1k_Pace_over_Time.png?raw=true "Fastest 1K Pace Over Time")
+
+![Forecast Weekly Pace](Forecast_Weekly_Pace.png?raw=true "Forecast Weekly Pace")
 
 ![Longest Run Per Month](Longest_Run_per_Month.png?raw=true "Longest Run Per Month")
 
@@ -52,6 +56,10 @@ If other people start using this, I'll try and streamline this process as much a
 ![Run Rest Ratio Heatmap](Run_Rest_Ratio_Heatmap.png?raw=true "Run Rest Ratio Heatmap")
 
 ![Run Start Time By Month](Run_Start_Time_by_Month.png?raw=true "Run Start Time By Month")
+
+![Run Type Clusters](Run_Type_Clusters.png?raw=true "Run Type Clusters")
+
+![Run Type Distribution By Year](Run_Type_Distribution_By_Year.png?raw=true "Run Type Distribution By Year")
 
 ![Running Pace Over Time](Running_Pace_over_Time.png?raw=true "Running Pace Over Time")
 
