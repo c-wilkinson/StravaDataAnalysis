@@ -11,9 +11,9 @@ If other people start using this, I'll try and streamline this process as much a
 [![CodeQL](https://github.com/c-wilkinson/StravaDataAnalysis/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/c-wilkinson/StravaDataAnalysis/actions/workflows/codeql-analysis.yml)
 
 ## Generated Content
-📅 Stats last updated on: **2025-06-11 13:30:08**
+📅 Stats last updated on: **2025-06-11 13:50:30**
 
-🏃‍♂️ Most recent run: 0 years, 0 months, 1 days, 2 hours and 19 minutes
+🏃‍♂️ Most recent run: 0 years, 0 months, 1 days, 2 hours and 40 minutes
 
 ![A.I. Recommended Training](A.I._Recommended_Training.png?raw=true "A.I. Recommended Training")
 
@@ -68,6 +68,8 @@ If other people start using this, I'll try and streamline this process as much a
 ![Running Pace Vs Total Distance](Running_Pace_vs_Total_Distance.png?raw=true "Running Pace Vs Total Distance")
 
 ![Time Taken Distance](Time_Taken_Distance.png?raw=true "Time Taken Distance")
+
+![Time Taken Distance Recent Years](Time_Taken_Distance_Recent_Years.png?raw=true "Time Taken Distance Recent Years")
 
 ![Total Distance Ran By Month](Total_Distance_Ran_by_Month.png?raw=true "Total Distance Ran By Month")
 
