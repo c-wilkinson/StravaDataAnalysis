@@ -9,7 +9,7 @@ packages = [{ include = "src" }]
 [tool.poetry.dependencies]
 python = "^3.11"
 pandas = "^1.5"
-matplotlib = "^3.7"
+matplotlib = "^3.10"
 seaborn = "^0.12"
 requests = "^2.32"
 pyAesCrypt = "^6.0"
