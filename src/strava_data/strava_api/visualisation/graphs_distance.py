@@ -3,6 +3,7 @@ Contains the distance chart functions, each saving a PNG file.
 """
 
 import calendar
+from datetime import datetime
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -112,6 +113,27 @@ def plot_time_taken_over_distances(activities_df: pd.DataFrame, output_path: str
         plot_func=plot_fn,
     )
     # pylint: enable=R0801
+
+
+def plot_time_taken_over_distances_recent_years(
+    activities_df: pd.DataFrame,
+    output_path: str,
+) -> None:
+    """
+    Time Taken Over Distances (Recent Years Only):
+    - Same as plot_time_taken_over_distances but filtered to current and previous year.
+    """
+    if activities_df.empty:
+        return
+
+    activities_df["start_date_local"] = pd.to_datetime(activities_df["start_date_local"])
+
+    current_year = datetime.now().year
+    years_to_include = {current_year, current_year - 1}
+    filtered_df = activities_df[activities_df["start_date_local"].dt.year.isin(years_to_include)]
+
+    # Reuse original plotting function on filtered data
+    plot_time_taken_over_distances(filtered_df, output_path)
 
 
 def plot_pace_vs_total_distance(splits_df: pd.DataFrame, output_path: str) -> None:
