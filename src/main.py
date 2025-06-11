@@ -101,6 +101,10 @@ def generate_pace_and_distance_charts(activities_df: pd.DataFrame, splits_df: pd
     graphs_pace.plot_pace_vs_elevation_change(splits_df, "Running_Pace_vs_Elevation_Change.png")
     LOGGER.info("Generate Time_Taken_Distance")
     graphs_distance.plot_time_taken_over_distances(activities_df, "Time_Taken_Distance.png")
+    LOGGER.info("Generate Time_Taken_Distance_Recent_Years")
+    graphs_distance.plot_time_taken_over_distances_recent_years(
+        activities_df, "Time_Taken_Distance_Recent_Years.png"
+    )
     LOGGER.info("Generate Running_Pace_over_Time")
     graphs_pace.plot_running_pace_over_time(splits_df, "Running_Pace_over_Time.png")
     LOGGER.info("Generate Running_Pace_vs_Total_Distance")
