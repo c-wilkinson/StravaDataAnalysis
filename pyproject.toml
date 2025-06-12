@@ -10,7 +10,7 @@ packages = [{ include = "src" }]
 python = "^3.11"
 pandas = "^2.3"
 matplotlib = "^3.10"
-seaborn = "^0.12"
+seaborn = "^0.13"
 requests = "^2.32"
 pyAesCrypt = "^6.0"
 cryptography = ">=44.0.1"
