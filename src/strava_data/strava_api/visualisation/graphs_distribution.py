@@ -206,7 +206,7 @@ def plot_run_days_heatmap(activities_df: pd.DataFrame, output_path: str) -> None
     def plot_fn(axis):
         sns.heatmap(
             pivot,
-            annot=pivot.notna(),
+            annot=pivot,
             fmt=".0f",
             cmap="Greens",
             cbar_kws={"label": "Run Days"},
@@ -253,7 +253,7 @@ def plot_rest_days_heatmap(activities_df: pd.DataFrame, output_path: str) -> Non
     def plot_fn(axis):
         sns.heatmap(
             pivot,
-            annot=pivot.notna(),
+            annot=pivot,
             fmt=".0f",
             cmap="Reds",
             cbar_kws={"label": "Rest Days"},
@@ -315,7 +315,7 @@ def plot_run_rest_ratio_heatmap(activities_df: pd.DataFrame, output_path: str) -
     def plot_fn(axis):
         sns.heatmap(
             pivot,
-            annot=pivot.notna(),
+            annot=pivot,
             fmt=".2f",
             cmap=cmap,
             norm=norm,
