@@ -11,9 +11,9 @@ If other people start using this, I'll try and streamline this process as much a
 [![CodeQL](https://github.com/c-wilkinson/StravaDataAnalysis/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/c-wilkinson/StravaDataAnalysis/actions/workflows/codeql-analysis.yml)
 
 ## Generated Content
-📅 Stats last updated on: **2025-09-01 16:43:26**
+📅 Stats last updated on: **2025-09-01 16:52:11**
 
-🏃‍♂️ Most recent run: 0 years, 1 months, 15 days, 6 hours and 40 minutes
+🏃‍♂️ Most recent run: 0 years, 1 months, 15 days, 6 hours and 49 minutes
 
 ![A.I. Recommended Training](A.I._Recommended_Training.png?raw=true "A.I. Recommended Training")
 
