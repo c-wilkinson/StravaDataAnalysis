@@ -15,6 +15,7 @@ from strava_data.strava_api.visualisation.utils import (
     format_pace,
     save_and_close_plot,
     add_title_with_attribution,
+    TitleBoxConfig,
 )
 from utils.logger import get_logger
 
@@ -102,7 +103,7 @@ def plot_forecast(weekly_data: pd.DataFrame, forecast_value: float, output_path:
     add_title_with_attribution(
         plt.gcf(),
         "Weekly Median Pace with Forecast",
-        attribution="Garmin (synced via Strava)",
+        TitleBoxConfig(),
     )
     save_and_close_plot(output_path)
 

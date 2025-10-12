@@ -48,8 +48,8 @@ def generate_readme() -> None:
     with open(README_PATH, "w", encoding="utf-8") as handle:
         handle.write("# StravaDataAnalysis\n")
         handle.write(
-            "This repository extracts data from the Strava API, stores it locally (encrypted), "
-            "and generates visualizations.\n\n"
+            "This repository extracts data from the Strava API, which is downstream of Garmin "
+            "devices, stores it locally (encrypted), and generates visualizations.\n\n"
             "If other people start using this, I'll try and streamline this process as much as I "
             "can.\n\n"
             "[![License: Unlicense](https://img.shields.io/badge/license-Unlicense-blue.svg)]"

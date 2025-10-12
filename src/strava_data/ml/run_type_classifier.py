@@ -15,6 +15,7 @@ from strava_data.strava_api.visualisation.utils import (
     save_and_close_plot,
     format_pace,
     add_title_with_attribution,
+    TitleBoxConfig,
 )
 from utils.logger import get_logger
 
@@ -86,7 +87,7 @@ def plot_clusters(data: pd.DataFrame, output_path: str) -> None:
     add_title_with_attribution(
         plt.gcf(),
         "Run Type Clustering",
-        attribution="Garmin (synced via Strava)",
+        TitleBoxConfig(),
     )
     save_and_close_plot(output_path)
 
@@ -107,7 +108,7 @@ def plot_run_type_distribution_by_year(data: pd.DataFrame, output_path: str) -> 
     add_title_with_attribution(
         plt.gcf(),
         "Run Type Distribution by Year",
-        attribution="Garmin (synced via Strava)",
+        TitleBoxConfig(),
     )
     save_and_close_plot(output_path)
 
