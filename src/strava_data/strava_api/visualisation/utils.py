@@ -58,6 +58,7 @@ def _place_texts(
     fig: plt.Figure,
     title: str,
     attribution: Optional[str],
+    *,
     title_y: float,
     subtitle_y: float,
     title_fontsize: int,
@@ -134,6 +135,7 @@ def _shift_texts(title_txt: Text, attr_txt: Optional[Text], shift: float) -> Non
 
 def _lift_if_needed(
     fig: plt.Figure,
+    *,
     axes_top: float,
     min_gap: float,
     box_pad: float,
@@ -172,6 +174,7 @@ def _lift_if_needed(
 
 def _draw_background_box(
     fig: plt.Figure,
+    *,
     ymin: float,
     ymax: float,
     box_left: float,
@@ -226,16 +229,28 @@ def add_title_with_attribution(
         fig,
         title,
         config.attribution,
-        title_y,
-        subtitle_y,
-        config.fontsizes[0],
-        config.fontsizes[1],
+        title_y=title_y,
+        subtitle_y=subtitle_y,
+        title_fontsize=config.fontsizes[0],
+        subtitle_fontsize=config.fontsizes[1],
     )
 
     ymin, ymax = _lift_if_needed(
-        fig, axes_top, config.gap_and_pad[0], config.gap_and_pad[1], title_txt, attr_txt
+        fig,
+        axes_top=axes_top,
+        min_gap=config.gap_and_pad[0],
+        box_pad=config.gap_and_pad[1],
+        title_txt=title_txt,
+        attr_txt=attr_txt,
     )
-    _draw_background_box(fig, ymin, ymax, config.box_lr[0], config.box_lr[1], config.gap_and_pad[1])
+    _draw_background_box(
+        fig,
+        ymin=ymin,
+        ymax=ymax,
+        box_left=config.box_lr[0],
+        box_right=config.box_lr[1],
+        box_pad=config.gap_and_pad[1],
+    )
 
 
 def configure_matplotlib_styles() -> None:
