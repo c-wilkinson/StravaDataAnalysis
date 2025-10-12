@@ -1,5 +1,5 @@
 # StravaDataAnalysis
-This repository extracts data from the Strava API, stores it locally (encrypted), and generates visualizations.
+This repository extracts data from the Strava API, which is downstream of Garmin devices, stores it locally (encrypted), and generates visualizations.
 
 If other people start using this, I'll try and streamline this process as much as I can.
 
@@ -11,9 +11,9 @@ If other people start using this, I'll try and streamline this process as much a
 [![CodeQL](https://github.com/c-wilkinson/StravaDataAnalysis/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/c-wilkinson/StravaDataAnalysis/actions/workflows/codeql-analysis.yml)
 
 ## Generated Content
-📅 Stats last updated on: **2025-10-12 16:16:34**
+📅 Stats last updated on: **2025-10-12 16:27:04**
 
-🏃‍♂️ Most recent run: 0 years, 0 months, 2 days, 5 hours and 35 minutes
+🏃‍♂️ Most recent run: 0 years, 0 months, 2 days, 5 hours and 45 minutes
 
 ![A.I. Recommended Training](A.I._Recommended_Training.png?raw=true "A.I. Recommended Training")
 
