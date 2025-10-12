@@ -14,6 +14,8 @@ from strava_data.strava_api.visualisation.utils import (
     prepare_dated_activities,
     save_and_close_plot,
     format_pace,
+    add_title_with_attribution,
+    TitleBoxConfig,
 )
 from utils.logger import get_logger
 
@@ -77,12 +79,16 @@ def plot_clusters(data: pd.DataFrame, output_path: str) -> None:
         palette="tab10",
         alpha=0.8,
     )
-    plt.title("Run Type Clustering")
     plt.xlabel("Distance (km)")
     plt.ylabel("Pace (mm:ss per km)")
     plt.gca().yaxis.set_major_formatter(plt.FuncFormatter(format_pace))
     plt.grid(True)
     plt.legend(title="Run Type")
+    add_title_with_attribution(
+        plt.gcf(),
+        "Run Type Clustering",
+        TitleBoxConfig(),
+    )
     save_and_close_plot(output_path)
 
 
@@ -94,12 +100,16 @@ def plot_run_type_distribution_by_year(data: pd.DataFrame, output_path: str) -> 
     pivot = counts.pivot(index="year", columns="run_type", values="count").fillna(0)
 
     pivot.plot(kind="bar", stacked=True, figsize=(10, 6), colormap="tab10")
-    plt.title("Run Type Distribution by Year")
     plt.xlabel("Year")
     plt.ylabel("Number of Runs")
     plt.xticks(rotation=45)
     plt.legend(title="Run Type")
     plt.grid(True, axis="y")
+    add_title_with_attribution(
+        plt.gcf(),
+        "Run Type Distribution by Year",
+        TitleBoxConfig(),
+    )
     save_and_close_plot(output_path)
 
 
