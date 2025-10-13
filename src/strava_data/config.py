@@ -7,6 +7,7 @@ import os
 
 CONFIG_FILE = "config.txt"
 
+# pylint: disable=C0103
 # Attempt to read password / buffer size from local config file
 if os.path.isfile(CONFIG_FILE):
     with open(CONFIG_FILE, "r", encoding="utf-8") as file_handle:
@@ -21,7 +22,7 @@ else:
     ENCRYPTION_PASSWORD = os.environ.get("ENCRYPTIONPASSWORD", "default_password")
     CLIENT_ID = os.environ.get("CLIENTID", "")
     CLIENT_SECRET = os.environ.get("CLIENTSECRET", "")
-
+# pylint: enable=C0103
 
 def get_buffer_size() -> int:
     """
