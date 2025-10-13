@@ -218,7 +218,6 @@ def _lift_if_needed(
     Returns:
         (ymin, ymax) of the final text union after any shift.
     """
-    # Get a fresh renderer (also ensures layout is finalised)
     renderer = _finalise_and_get_renderer(fig)
 
     ymin, ymax = _measure_text_bounds(fig, renderer, [title_txt, attr_txt])
@@ -226,29 +225,25 @@ def _lift_if_needed(
     occupied_top = _occupied_content_top(fig, renderer)
 
     # Small extra buffer if any legend is visible (avoids near misses)
-    extra = 0.0
-    for axis in fig.axes:
-        legend = axis.get_legend()
-        if legend is not None and legend.get_visible():
-            extra = 0.01
-            break
+    extra = (
+        0.01
+        if any((legend := ax.get_legend()) is not None and legend.get_visible() for ax in fig.axes)
+        else 0.0
+    )
 
     required_bottom = occupied_top + (min_gap + extra)
     if box_bottom >= required_bottom:
         return ymin, ymax
 
     # Need to lift the banner
-    shift = required_bottom - box_bottom
-    _, y_title = title_txt.get_position()
-    max_y = 0.995
-    max_shift = max(0.0, max_y - y_title)
-    shift = min(shift, max_shift)
-
+    shift = min(
+        required_bottom - box_bottom,
+        max(0.0, 0.995 - title_txt.get_position()[1]),
+    )
     _shift_texts(title_txt, attr_txt, shift)
 
     fig.canvas.draw()  # re-measure after moving
-    renderer = fig.canvas.get_renderer()
-    return _measure_text_bounds(fig, renderer, [title_txt, attr_txt])
+    return _measure_text_bounds(fig, fig.canvas.get_renderer(), [title_txt, attr_txt])
 
 
 def _draw_background_box(
