@@ -24,6 +24,7 @@ else:
     CLIENT_SECRET = os.environ.get("CLIENTSECRET", "")
 # pylint: enable=C0103
 
+
 def get_buffer_size() -> int:
     """
     Returns the buffer size used for file encryption/decryption.
