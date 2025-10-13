@@ -27,6 +27,76 @@ class TitleBoxConfig:
     box_lr: Tuple[float, float] = (0.05, 0.95)  # (box_left, box_right)
 
 
+def _occupied_content_top(fig: plt.Figure, renderer) -> float:
+    """
+    Highest occupied y in figure coords considering axes *tight* bboxes
+    (includes tick labels/rotations) and any visible legends.
+    Falls back to _axes_top(fig) if nothing measurable is found.
+    """
+    tops: List[float] = []
+    try:
+        inv = fig.transFigure.inverted()
+    except (AttributeError, ValueError):
+        inv = None
+
+    for axis in getattr(fig, "axes", []):
+        try:
+            if not axis.get_visible():
+                continue
+        except (AttributeError, ValueError):
+            pass
+
+        # Axes tight bbox (ticks/labels included)
+        try:
+            tight_bbox = axis.get_tightbbox(renderer)
+            if tight_bbox is not None:
+                tops.append(tight_bbox.transformed(inv).y1 if inv is not None else tight_bbox.y1)
+        except (AttributeError, ValueError):
+            pass
+
+        # Legend bbox (if present)
+        try:
+            legend = axis.get_legend()
+            if legend is not None and legend.get_visible():
+                legend_bbox = legend.get_window_extent(renderer=renderer)
+                if legend_bbox is not None:
+                    tops.append(
+                        legend_bbox.transformed(inv).y1 if inv is not None else legend_bbox.y1
+                    )
+        except (AttributeError, ValueError):
+            pass
+
+    return max(tops) if tops else _axes_top(fig)
+
+
+def _reserve_space_above_axes(
+    fig: plt.Figure, top_limit: float, *, min_bottom: float = 0.05
+) -> None:
+    """
+    Ensure no axes extend above top_limit (figure coords).
+    Prefer shifting axes down; if that would push the bottom below min_bottom,
+    trim from the top instead.
+    """
+    for axis in fig.axes:
+        if not axis.get_visible():
+            continue
+
+        pos = axis.get_position()
+        if pos.y1 <= top_limit + 1e-6:
+            continue
+
+        excess = pos.y1 - top_limit
+        new_y0 = pos.y0 - excess
+        new_y1 = top_limit
+
+        # If we can't shift without going below min_bottom, shrink from the top
+        if new_y0 < min_bottom:
+            new_y0 = pos.y0
+            new_y1 = top_limit
+
+        axis.set_position([pos.x0, new_y0, pos.width, new_y1 - new_y0])
+
+
 def _finalise_and_get_renderer(fig: plt.Figure):
     """Draw once so constrained layout is final and return the renderer."""
     fig.canvas.draw()
@@ -136,7 +206,6 @@ def _shift_texts(title_txt: Text, attr_txt: Optional[Text], shift: float) -> Non
 def _lift_if_needed(
     fig: plt.Figure,
     *,
-    axes_top: float,
     min_gap: float,
     box_pad: float,
     title_txt: Text,
@@ -149,27 +218,32 @@ def _lift_if_needed(
     Returns:
         (ymin, ymax) of the final text union after any shift.
     """
-    # Get a fresh renderer (also ensures layout is finalised)
     renderer = _finalise_and_get_renderer(fig)
 
     ymin, ymax = _measure_text_bounds(fig, renderer, [title_txt, attr_txt])
     box_bottom = ymin - box_pad
-    required_bottom = axes_top + min_gap
+    occupied_top = _occupied_content_top(fig, renderer)
+
+    # Small extra buffer if any legend is visible (avoids near misses)
+    extra = (
+        0.01
+        if any((legend := ax.get_legend()) is not None and legend.get_visible() for ax in fig.axes)
+        else 0.0
+    )
+
+    required_bottom = occupied_top + (min_gap + extra)
     if box_bottom >= required_bottom:
         return ymin, ymax
 
     # Need to lift the banner
-    shift = required_bottom - box_bottom
-    _, y_t = title_txt.get_position()
-    max_y = 0.995
-    max_shift = max(0.0, max_y - y_t)
-    shift = min(shift, max_shift)
-
+    shift = min(
+        required_bottom - box_bottom,
+        max(0.0, 0.995 - title_txt.get_position()[1]),
+    )
     _shift_texts(title_txt, attr_txt, shift)
 
     fig.canvas.draw()  # re-measure after moving
-    renderer = fig.canvas.get_renderer()
-    return _measure_text_bounds(fig, renderer, [title_txt, attr_txt])
+    return _measure_text_bounds(fig, fig.canvas.get_renderer(), [title_txt, attr_txt])
 
 
 def _draw_background_box(
@@ -237,12 +311,18 @@ def add_title_with_attribution(
 
     ymin, ymax = _lift_if_needed(
         fig,
-        axes_top=axes_top,
         min_gap=config.gap_and_pad[0],
         box_pad=config.gap_and_pad[1],
         title_txt=title_txt,
         attr_txt=attr_txt,
     )
+
+    # Push axes down so they clear the banner by at least min_gap
+    header_bottom = ymin - config.gap_and_pad[1]
+    top_limit = header_bottom - config.gap_and_pad[0]
+    _reserve_space_above_axes(fig, top_limit)
+    fig.canvas.draw()
+
     _draw_background_box(
         fig,
         ymin=ymin,
