@@ -15,7 +15,7 @@ requests = "^2.32"
 pyAesCrypt = "^6.0"
 cryptography = ">=44.0.1"
 numpy = "^2.3"
-scikit-learn = "^1.7"
+scikit-learn = "^1.8"
 
 [tool.poetry.group.dev.dependencies]
 pylint = "^4.0"
