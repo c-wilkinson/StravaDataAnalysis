@@ -250,6 +250,8 @@ def plot_pace_variability_per_run(splits_df: pd.DataFrame, output_path: str) -> 
         return
 
     splits["pace_sec_km"] = splits["elapsed_time_s"] / splits["distance_km"]
+    splits.replace([np.inf, -np.inf], np.nan, inplace=True)
+    splits.dropna(subset=["pace_sec_km"], inplace=True)
 
     grouped = (
         splits.groupby(["activity_id", "start_date_local"])

@@ -225,7 +225,7 @@ def plot_number_of_runs_per_distance(activities_df: pd.DataFrame, output_path: s
         include_lowest=True,
     )
 
-    grouped = data.groupby(["distance_bin", "year"]).size().reset_index(name="count")
+    grouped = data.groupby(["distance_bin", "year"], observed=True).size().reset_index(name="count")
 
     def plot_fn(axis):
         sns.barplot(data=grouped, x="distance_bin", y="count", hue="year", errorbar=None, ax=axis)

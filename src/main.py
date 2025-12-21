@@ -23,6 +23,7 @@ from strava_data.strava_api.visualisation import (
     graphs_distance,
     graphs_pace,
     graphs_effort,
+    summary_cards,
 )
 from strava_data.strava_api.visualisation.utils import configure_matplotlib_styles
 from strava_data.ml.pace_forecast import run_forecast_pipeline
@@ -94,6 +95,8 @@ def generate_required_charts(activities_df: pd.DataFrame, splits_df: pd.DataFram
     generate_pace_and_distance_charts(activities_df, splits_df)
     generate_distribution_and_heatmaps(activities_df, splits_df)
     generate_time_series_and_trends(activities_df, splits_df)
+    LOGGER.info("Generate summary cards")
+    summary_cards.render_week_month_year_cards(activities_df, splits_df)
 
 
 def generate_pace_and_distance_charts(activities_df: pd.DataFrame, splits_df: pd.DataFrame) -> None:
