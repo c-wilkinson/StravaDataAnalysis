@@ -2,6 +2,7 @@
 Machine learning to forecast pace
 """
 
+from pathlib import Path
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.linear_model import Ridge
@@ -108,10 +109,11 @@ def plot_forecast(weekly_data: pd.DataFrame, forecast_value: float, output_path:
     save_and_close_plot(output_path)
 
 
-def run_forecast_pipeline(splits_df: pd.DataFrame) -> None:
+def run_forecast_pipeline(splits_df: pd.DataFrame, output_dir: Path) -> None:
     """
     Orchestrates weekly pace forecast: feature prep, training, prediction, plotting.
     """
+    output_dir.mkdir(parents=True, exist_ok=True)
     LOGGER.info("Building features from splits...")
     weekly_data = build_weekly_pace_features(splits_df)
 
@@ -123,4 +125,4 @@ def run_forecast_pipeline(splits_df: pd.DataFrame) -> None:
     forecast_value = predict_next_week(model, latest_features)
 
     LOGGER.info("Generating forecast chart...")
-    plot_forecast(weekly_data, forecast_value, "Forecast_Weekly_Pace.png")
+    plot_forecast(weekly_data, forecast_value, str(output_dir / "Forecast_Weekly_Pace.png"))

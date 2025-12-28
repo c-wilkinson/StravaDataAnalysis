@@ -2,7 +2,7 @@
 Render Strava-style summary cards (weekly / monthly / yearly) as PNG images.
 
 Public entrypoint:
-- render_week_month_year_cards(activities_df, splits_df)
+- render_week_month_year_cards(activities_df, splits_df, output_dir)
 
 This module follows the existing visualisation style:
 - accepts DataFrames
@@ -336,7 +336,7 @@ def _draw_metrics_grid(axis: Axes, metrics: Sequence[CardMetric]) -> None:
             metric.delta,
             fontsize=16,
             color="#c9c9d1",
-            ha="right",  # key: keep inside edge
+            ha="right",
             va="center",
         )
         axis.text(
@@ -345,7 +345,7 @@ def _draw_metrics_grid(axis: Axes, metrics: Sequence[CardMetric]) -> None:
             metric.previous,
             fontsize=12,
             color="#9ea0aa",
-            ha="right",  # key: keep inside edge
+            ha="right",
             va="center",
         )
 
@@ -435,24 +435,39 @@ def _render_all_cards(
     weekly: Tuple[PeriodStats, PeriodStats],
     monthly: Tuple[PeriodStats, PeriodStats],
     yearly: Tuple[PeriodStats, PeriodStats],
+    output_dir: Path,
 ) -> None:
     """
-    Render all summary cards using fixed output filenames.
+    Render all summary cards using fixed output filenames into output_dir.
     """
     week_stats, prev_week_stats = weekly
     month_stats, prev_month_stats = monthly
     year_stats, prev_year_stats = yearly
 
-    _render_summary_card(week_stats, prev_week_stats, Path("1_summary_card_weekly.png"))
-    _render_summary_card(month_stats, prev_month_stats, Path("2_summary_card_monthly.png"))
-    _render_summary_card(year_stats, prev_year_stats, Path("3_summary_card_yearly.png"))
+    _render_summary_card(week_stats, prev_week_stats, output_dir / "1_summary_card_weekly.png")
+    _render_summary_card(month_stats, prev_month_stats, output_dir / "2_summary_card_monthly.png")
+    _render_summary_card(year_stats, prev_year_stats, output_dir / "3_summary_card_yearly.png")
 
 
-def render_week_month_year_cards(activities_df: pd.DataFrame, splits_df: pd.DataFrame) -> None:
+def render_week_month_year_cards(
+    activities_df: pd.DataFrame,
+    splits_df: pd.DataFrame,
+    output_dir: Path,
+) -> None:
     """
     Generate weekly, monthly, and yearly summary card images from activity data.
 
-    Output files:
+    Parameters
+    ----------
+    activities_df:
+        Activities DataFrame loaded from the DB.
+    splits_df:
+        Splits DataFrame loaded from the DB.
+    output_dir:
+        Directory to write PNG outputs into.
+
+    Output files
+    ------------
     - 1_summary_card_weekly.png
     - 2_summary_card_monthly.png
     - 3_summary_card_yearly.png
@@ -460,8 +475,11 @@ def render_week_month_year_cards(activities_df: pd.DataFrame, splits_df: pd.Data
     if activities_df.empty:
         return
 
+    output_dir.mkdir(parents=True, exist_ok=True)
+
     activities = _activities_from_df(activities_df)
     splits = _splits_from_df(splits_df) if not splits_df.empty else []
+
     as_of = datetime.now()
     LOGGER.info("Summary cards anchor date (as_of): %s", as_of.isoformat())
     LOGGER.info(
@@ -469,6 +487,7 @@ def render_week_month_year_cards(activities_df: pd.DataFrame, splits_df: pd.Data
         activities_df["start_date_local"].min(),
         activities_df["start_date_local"].max(),
     )
+
     if "start_date_local" in activities_df.columns and not activities_df["start_date_local"].empty:
         latest = pd.to_datetime(
             activities_df["start_date_local"],
@@ -489,5 +508,6 @@ def render_week_month_year_cards(activities_df: pd.DataFrame, splits_df: pd.Data
 
     LOGGER.info("Converted %d activities", len(activities))
     LOGGER.info("Converted %d splits (lite)", len(splits))
+
     weekly, monthly, yearly = _compute_week_month_year_stats(activities, splits, as_of)
-    _render_all_cards(weekly, monthly, yearly)
+    _render_all_cards(weekly, monthly, yearly, output_dir)
