@@ -194,32 +194,54 @@ def compute_period_stats(
 
 def make_week_windows(as_of: datetime) -> Tuple[Window, Window]:
     """
-    Build last 7 days vs previous 7 days windows (inclusive).
-    """
-    end = as_of
-    start = end - timedelta(days=6)
+    Build full calendar week windows.
 
-    prev_end = start - timedelta(days=1)
-    prev_start = prev_end - timedelta(days=6)
+    Week starts on Monday and ends on Sunday, regardless of activity presence.
+    - Current: Monday 00:00:00 -> Sunday 23:59:59 (week containing as_of)
+    - Previous: Monday 00:00:00 -> Sunday 23:59:59 (week before current)
+    """
+    week_start = (as_of - timedelta(days=as_of.weekday())).replace(
+        hour=0, minute=0, second=0, microsecond=0
+    )
+    week_end = week_start + timedelta(days=7) - timedelta(seconds=1)
+
+    prev_start = week_start - timedelta(days=7)
+    prev_end = week_start - timedelta(seconds=1)
 
     return (
-        Window(label="Week", start=start, end=end),
+        Window(label="Week", start=week_start, end=week_end),
         Window(label="Week", start=prev_start, end=prev_end),
     )
 
 
 def make_month_windows(as_of: datetime) -> Tuple[Window, Window]:
     """
-    Build last 30 days vs previous 30 days windows (rolling, inclusive).
-    """
-    end = as_of
-    start = end - timedelta(days=29)
+    Build full calendar month windows.
 
-    prev_end = start - timedelta(days=1)
-    prev_start = prev_end - timedelta(days=29)
+    Month starts on the 1st and ends on the last day, regardless of activity presence.
+    - Current: 1st 00:00:00 -> last day 23:59:59 (month containing as_of)
+    - Previous: 1st 00:00:00 -> last day 23:59:59 (month before current)
+    """
+    month_start = as_of.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+    # First moment of next month
+    if month_start.month == 12:
+        next_month_start = month_start.replace(year=month_start.year + 1, month=1)
+    else:
+        next_month_start = month_start.replace(month=month_start.month + 1)
+
+    month_end = next_month_start - timedelta(seconds=1)
+
+    # Previous month start
+    if month_start.month == 1:
+        prev_start = month_start.replace(year=month_start.year - 1, month=12)
+    else:
+        prev_start = month_start.replace(month=month_start.month - 1)
+
+    prev_end = month_start - timedelta(seconds=1)
 
     return (
-        Window(label="Month", start=start, end=end),
+        Window(label="Month", start=month_start, end=month_end),
         Window(label="Month", start=prev_start, end=prev_end),
     )
 
@@ -231,14 +253,14 @@ def make_year_windows(as_of: datetime) -> Tuple[Window, Window]:
     - Current: Jan 1 of current year -> as_of
     - Previous: Jan 1 -> Dec 31 of previous year
     """
-    year = as_of.year
-    current_start = datetime(year, 1, 1)
-    current_end = as_of
+    year_start = datetime(as_of.year, 1, 1, 0, 0, 0)
+    next_year_start = datetime(as_of.year + 1, 1, 1, 0, 0, 0)
+    year_end = next_year_start - timedelta(seconds=1)
 
-    prev_start = datetime(year - 1, 1, 1)
-    prev_end = datetime(year - 1, 12, 31, 23, 59, 59)
+    prev_start = datetime(as_of.year - 1, 1, 1, 0, 0, 0)
+    prev_end = year_start - timedelta(seconds=1)
 
     return (
-        Window(label=f"Year {year}", start=current_start, end=current_end),
-        Window(label=f"Year {year - 1}", start=prev_start, end=prev_end),
+        Window(label="Year", start=year_start, end=year_end),
+        Window(label="Year", start=prev_start, end=prev_end),
     )
