@@ -2,6 +2,7 @@
 Machine learning to classify run types (e.g. Easy, Tempo, Intervals, Long)
 """
 
+from pathlib import Path
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -113,10 +114,11 @@ def plot_run_type_distribution_by_year(data: pd.DataFrame, output_path: str) -> 
     save_and_close_plot(output_path)
 
 
-def run_clustering_pipeline(splits_df: pd.DataFrame) -> pd.DataFrame:
+def run_clustering_pipeline(splits_df: pd.DataFrame, output_dir: Path) -> pd.DataFrame:
     """
     Runs the full clustering pipeline: feature prep, clustering, and visualisation.
     """
+    output_dir.mkdir(parents=True, exist_ok=True)
     LOGGER.info("Loading and building features...")
     feature_data = build_run_features(splits_df)
 
@@ -124,9 +126,11 @@ def run_clustering_pipeline(splits_df: pd.DataFrame) -> pd.DataFrame:
     clustered = cluster_run_types(feature_data, n_clusters=4)
 
     LOGGER.info("Plotting clusters...")
-    plot_clusters(clustered, "Run_Type_Clusters.png")
+    plot_clusters(clustered, str(output_dir / "Run_Type_Clusters.png"))
 
     LOGGER.info("Plotting run type distribution...")
-    plot_run_type_distribution_by_year(clustered, "Run_Type_Distribution_By_Year.png")
+    plot_run_type_distribution_by_year(
+        clustered, str(output_dir / "Run_Type_Distribution_By_Year.png")
+    )
 
     return clustered

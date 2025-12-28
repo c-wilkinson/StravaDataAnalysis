@@ -11,79 +11,79 @@ If other people start using this, I'll try and streamline this process as much a
 [![CodeQL](https://github.com/c-wilkinson/StravaDataAnalysis/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/c-wilkinson/StravaDataAnalysis/actions/workflows/codeql-analysis.yml)
 
 ## Generated Content
-📅 Stats last updated on: **2025-12-28 16:46:42**
+📅 Stats last updated on: **2025-12-28 16:38:42**
 
-🏃‍♂️ Most recent run: 0 years, 0 months, 2 days, 9 hours and 18 minutes
+🏃‍♂️ Most recent run: 0 years, 0 months, 2 days, 9 hours and 10 minutes
 
-![1 Summary Card Weekly](1_summary_card_weekly.png?raw=true "1 Summary Card Weekly")
+![1 Summary Card Weekly](assets/1_summary_card_weekly.png?raw=true "1 Summary Card Weekly")
 
-![2 Summary Card Monthly](2_summary_card_monthly.png?raw=true "2 Summary Card Monthly")
+![2 Summary Card Monthly](assets/2_summary_card_monthly.png?raw=true "2 Summary Card Monthly")
 
-![3 Summary Card Yearly](3_summary_card_yearly.png?raw=true "3 Summary Card Yearly")
+![3 Summary Card Yearly](assets/3_summary_card_yearly.png?raw=true "3 Summary Card Yearly")
 
-![A.I. Recommended Training](A.I._Recommended_Training.png?raw=true "A.I. Recommended Training")
+![A.I. Recommended Training](assets/A.I._Recommended_Training.png?raw=true "A.I. Recommended Training")
 
-![Activity Heatmap](Activity_Heatmap.png?raw=true "Activity Heatmap")
+![Activity Heatmap](assets/Activity_Heatmap.png?raw=true "Activity Heatmap")
 
-![Cadence Over Time](Cadence_Over_Time.png?raw=true "Cadence Over Time")
+![Cadence Over Time](assets/Cadence_Over_Time.png?raw=true "Cadence Over Time")
 
-![Cumulative Distance](Cumulative_Distance.png?raw=true "Cumulative Distance")
+![Cumulative Distance](assets/Cumulative_Distance.png?raw=true "Cumulative Distance")
 
-![Elevation Gain Distribution](Elevation_Gain_Distribution.png?raw=true "Elevation Gain Distribution")
+![Elevation Gain Distribution](assets/Elevation_Gain_Distribution.png?raw=true "Elevation Gain Distribution")
 
-![Elevation Gain Per Km By Month](Elevation_Gain_per_KM_by_Month.png?raw=true "Elevation Gain Per Km By Month")
+![Elevation Gain Per Km By Month](assets/Elevation_Gain_per_KM_by_Month.png?raw=true "Elevation Gain Per Km By Month")
 
-![Fastest 1K Pace Over Time](Fastest_1k_Pace_over_Time.png?raw=true "Fastest 1K Pace Over Time")
+![Fastest 1K Pace Over Time](assets/Fastest_1k_Pace_over_Time.png?raw=true "Fastest 1K Pace Over Time")
 
-![Forecast Weekly Pace](Forecast_Weekly_Pace.png?raw=true "Forecast Weekly Pace")
+![Forecast Weekly Pace](assets/Forecast_Weekly_Pace.png?raw=true "Forecast Weekly Pace")
 
-![Longest Run Per Month](Longest_Run_per_Month.png?raw=true "Longest Run Per Month")
+![Longest Run Per Month](assets/Longest_Run_per_Month.png?raw=true "Longest Run Per Month")
 
-![Median 1K Pace Over Time](Median_1k_Pace_over_Time.png?raw=true "Median 1K Pace Over Time")
+![Median 1K Pace Over Time](assets/Median_1k_Pace_over_Time.png?raw=true "Median 1K Pace Over Time")
 
-![Monthly Distance By Year](Monthly_Distance_by_Year.png?raw=true "Monthly Distance By Year")
+![Monthly Distance By Year](assets/Monthly_Distance_by_Year.png?raw=true "Monthly Distance By Year")
 
-![Number Of Runs Per Distance](Number_of_Runs_per_Distance.png?raw=true "Number Of Runs Per Distance")
+![Number Of Runs Per Distance](assets/Number_of_Runs_per_Distance.png?raw=true "Number Of Runs Per Distance")
 
-![Pace Consistency By Run](Pace_Consistency_by_Run.png?raw=true "Pace Consistency By Run")
+![Pace Consistency By Run](assets/Pace_Consistency_by_Run.png?raw=true "Pace Consistency By Run")
 
-![Pace Distribution](Pace_Distribution.png?raw=true "Pace Distribution")
+![Pace Distribution](assets/Pace_Distribution.png?raw=true "Pace Distribution")
 
-![Pace By Day](Pace_by_Day.png?raw=true "Pace By Day")
+![Pace By Day](assets/Pace_by_Day.png?raw=true "Pace By Day")
 
-![Rest Days Heatmap](Rest_Days_Heatmap.png?raw=true "Rest Days Heatmap")
+![Rest Days Heatmap](assets/Rest_Days_Heatmap.png?raw=true "Rest Days Heatmap")
 
-![Rolling 30 Day Comparison](Rolling_30_Day_Comparison.png?raw=true "Rolling 30 Day Comparison")
+![Rolling 30 Day Comparison](assets/Rolling_30_Day_Comparison.png?raw=true "Rolling 30 Day Comparison")
 
-![Run Days Heatmap](Run_Days_Heatmap.png?raw=true "Run Days Heatmap")
+![Run Days Heatmap](assets/Run_Days_Heatmap.png?raw=true "Run Days Heatmap")
 
-![Run Distance Distribution](Run_Distance_Distribution.png?raw=true "Run Distance Distribution")
+![Run Distance Distribution](assets/Run_Distance_Distribution.png?raw=true "Run Distance Distribution")
 
-![Run Rest Ratio Heatmap](Run_Rest_Ratio_Heatmap.png?raw=true "Run Rest Ratio Heatmap")
+![Run Rest Ratio Heatmap](assets/Run_Rest_Ratio_Heatmap.png?raw=true "Run Rest Ratio Heatmap")
 
-![Run Start Time By Month](Run_Start_Time_by_Month.png?raw=true "Run Start Time By Month")
+![Run Start Time By Month](assets/Run_Start_Time_by_Month.png?raw=true "Run Start Time By Month")
 
-![Run Type Clusters](Run_Type_Clusters.png?raw=true "Run Type Clusters")
+![Run Type Clusters](assets/Run_Type_Clusters.png?raw=true "Run Type Clusters")
 
-![Run Type Distribution By Year](Run_Type_Distribution_By_Year.png?raw=true "Run Type Distribution By Year")
+![Run Type Distribution By Year](assets/Run_Type_Distribution_By_Year.png?raw=true "Run Type Distribution By Year")
 
-![Running Pace Over Time](Running_Pace_over_Time.png?raw=true "Running Pace Over Time")
+![Running Pace Over Time](assets/Running_Pace_over_Time.png?raw=true "Running Pace Over Time")
 
-![Running Pace Vs Elevation Change](Running_Pace_vs_Elevation_Change.png?raw=true "Running Pace Vs Elevation Change")
+![Running Pace Vs Elevation Change](assets/Running_Pace_vs_Elevation_Change.png?raw=true "Running Pace Vs Elevation Change")
 
-![Running Pace Vs Total Distance](Running_Pace_vs_Total_Distance.png?raw=true "Running Pace Vs Total Distance")
+![Running Pace Vs Total Distance](assets/Running_Pace_vs_Total_Distance.png?raw=true "Running Pace Vs Total Distance")
 
-![Time Taken Distance](Time_Taken_Distance.png?raw=true "Time Taken Distance")
+![Time Taken Distance](assets/Time_Taken_Distance.png?raw=true "Time Taken Distance")
 
-![Time Taken Distance Recent Years](Time_Taken_Distance_Recent_Years.png?raw=true "Time Taken Distance Recent Years")
+![Time Taken Distance Recent Years](assets/Time_Taken_Distance_Recent_Years.png?raw=true "Time Taken Distance Recent Years")
 
-![Total Distance Ran By Month](Total_Distance_Ran_by_Month.png?raw=true "Total Distance Ran By Month")
+![Total Distance Ran By Month](assets/Total_Distance_Ran_by_Month.png?raw=true "Total Distance Ran By Month")
 
-![Training Intensity By Heartrate Zone](Training_Intensity_by_HeartRate_Zone.png?raw=true "Training Intensity By Heartrate Zone")
+![Training Intensity By Heartrate Zone](assets/Training_Intensity_by_HeartRate_Zone.png?raw=true "Training Intensity By Heartrate Zone")
 
-![Training Load Over Time](Training_Load_Over_Time.png?raw=true "Training Load Over Time")
+![Training Load Over Time](assets/Training_Load_Over_Time.png?raw=true "Training Load Over Time")
 
-![Vo2 Proxy Over Time](VO2_Proxy_Over_Time.png?raw=true "Vo2 Proxy Over Time")
+![Vo2 Proxy Over Time](assets/VO2_Proxy_Over_Time.png?raw=true "Vo2 Proxy Over Time")
 
 ## Instructions
 As I'm sure is obvious, I'm teaching myself python as I go so the code quality is not likely to be great. Do with it as you wish.

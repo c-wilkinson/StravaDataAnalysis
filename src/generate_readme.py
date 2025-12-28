@@ -13,6 +13,8 @@ LOGGER = get_logger()
 
 # Build a path to the README.md in the top-level directory
 README_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "README.md")
+ASSETS_DIR = "assets"
+ASSETS_PATH = os.path.join(os.path.dirname(README_PATH), ASSETS_DIR)
 
 
 def generate_readme() -> None:
@@ -25,6 +27,7 @@ def generate_readme() -> None:
     """
     LOGGER.info("Start generate_readme.")
     decrypt_database()
+    os.makedirs(ASSETS_PATH, exist_ok=True)
 
     last_updated = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     last_run_time = get_last_run_time()
@@ -42,8 +45,6 @@ def generate_readme() -> None:
     encrypt_database()
     if os.path.exists(README_PATH):
         os.remove(README_PATH)
-
-    readme_dir = os.path.dirname(README_PATH)
 
     with open(README_PATH, "w", encoding="utf-8") as handle:
         handle.write("# StravaDataAnalysis\n")
@@ -80,11 +81,11 @@ def generate_readme() -> None:
         handle.write(f"🏃‍♂️ Most recent run: {time_string}\n\n")
 
         # Dynamically insert all PNG images
-        image_files = sorted(f for f in os.listdir(readme_dir) if f.endswith(".png"))
+        image_files = sorted(f for f in os.listdir(ASSETS_PATH) if f.endswith(".png"))
         for image in image_files:
             title = image.replace("_", " ").replace(".png", "").title()
             LOGGER.info("Adding %s to readme.md", title)
-            handle.write(f'![{title}]({image}?raw=true "{title}")\n\n')
+            handle.write(f'![{title}]({ASSETS_DIR}/{image}?raw=true "{title}")\n\n')
 
         handle.write("## Instructions\n")
         handle.write(
