@@ -239,7 +239,7 @@ def _build_metrics(current: PeriodStats, previous: PeriodStats) -> Tuple[CardMet
             previous=_format_prev(_format_m(previous.elevation.total_m)),
         ),
         CardMetric(
-            label="Avg distance (km)",
+            label="Avg distance",
             value=_format_km(current.distance.average_km),
             delta=_format_pct(
                 _pct_change(current.distance.average_km, previous.distance.average_km)
