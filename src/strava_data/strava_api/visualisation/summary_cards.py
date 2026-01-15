@@ -408,6 +408,8 @@ def _compute_week_month_year_stats(
     week_window, prev_week_window = make_week_windows(as_of)
     month_window, prev_month_window = make_month_windows(as_of)
     year_window, prev_year_window = make_year_windows(as_of)
+    last_year_as_of = as_of.replace(year=as_of.year - 1)
+    last_year_window, prev_last_year_window = make_year_windows(last_year_as_of)
 
     weekly = (
         compute_period_stats(week_window, activities, splits),
@@ -420,6 +422,10 @@ def _compute_week_month_year_stats(
     yearly = (
         compute_period_stats(year_window, activities, splits),
         compute_period_stats(prev_year_window, activities, splits),
+    )
+    yearly_last_year = (
+        compute_period_stats(last_year_window, activities, splits),
+        compute_period_stats(prev_last_year_window, activities, splits),
     )
     LOGGER.info(
         "Weekly window: %s -> %s | activities=%d",
@@ -439,13 +445,20 @@ def _compute_week_month_year_stats(
         year_window.end.date(),
         yearly[0].activities,
     )
-    return weekly, monthly, yearly
+    LOGGER.info(
+        "Yearly window: %s -> %s | activities=%d",
+        last_year_window.start.date(),
+        last_year_window.end.date(),
+        yearly_last_year[0].activities,
+    )
+    return weekly, monthly, yearly, yearly_last_year
 
 
 def _render_all_cards(
     weekly: Tuple[PeriodStats, PeriodStats],
     monthly: Tuple[PeriodStats, PeriodStats],
     yearly: Tuple[PeriodStats, PeriodStats],
+    yearly_last_year: Tuple[PeriodStats, PeriodStats],
     output_dir: Path,
 ) -> None:
     """
@@ -454,10 +467,12 @@ def _render_all_cards(
     week_stats, prev_week_stats = weekly
     month_stats, prev_month_stats = monthly
     year_stats, prev_year_stats = yearly
+    year_last_stats, prev_year_last_stats = yearly_last_year
 
     _render_summary_card(week_stats, prev_week_stats, output_dir / "1_summary_card_weekly.png")
     _render_summary_card(month_stats, prev_month_stats, output_dir / "2_summary_card_monthly.png")
     _render_summary_card(year_stats, prev_year_stats, output_dir / "3_summary_card_yearly.png")
+    _render_summary_card(year_last_stats, prev_year_last_stats, output_dir / "4_summary_card_yearly_last_year.png")
 
 
 def render_week_month_year_cards(
@@ -520,5 +535,5 @@ def render_week_month_year_cards(
     LOGGER.info("Converted %d activities", len(activities))
     LOGGER.info("Converted %d splits (lite)", len(splits))
 
-    weekly, monthly, yearly = _compute_week_month_year_stats(activities, splits, as_of)
-    _render_all_cards(weekly, monthly, yearly, output_dir)
+    weekly, monthly, yearly, yearly_last_year = _compute_week_month_year_stats(activities, splits, as_of)
+    _render_all_cards(weekly, monthly, yearly, yearly_last_year, output_dir)
