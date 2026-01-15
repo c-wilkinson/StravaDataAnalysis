@@ -52,6 +52,7 @@ class PaceStats:
     """
 
     fastest_km_s: Optional[float]
+    average_pace_s_per_km: Optional[float]
 
 
 @dataclass(frozen=True)
@@ -161,9 +162,14 @@ def compute_period_stats(
 
     total_distance_km = _km(sum(activity.distance_m for activity in activities_in_window))
     total_time_hours = _hours(sum(activity.moving_time_s for activity in activities_in_window))
+    total_time_seconds = sum(activity.moving_time_s for activity in activities_in_window)
     total_elevation_m = float(
         sum(activity.total_elevation_gain_m for activity in activities_in_window)
     )
+
+    average_pace_s_per_km: Optional[float] = None
+    if total_distance_km > 0:
+        average_pace_s_per_km = float(total_time_seconds) / float(total_distance_km)
 
     longest_km: Optional[float] = None
     if activities_in_window:
@@ -189,6 +195,7 @@ def compute_period_stats(
         ),
         pace=PaceStats(
             fastest_km_s=fastest_km_s,
+            average_pace_s_per_km=average_pace_s_per_km,
         ),
     )
 

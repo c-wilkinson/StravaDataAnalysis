@@ -247,6 +247,17 @@ def _build_metrics(current: PeriodStats, previous: PeriodStats) -> Tuple[CardMet
             previous=_format_prev(_format_km(previous.distance.average_km)),
         ),
         CardMetric(
+            label="Avg pace",
+            value=_format_pace(current.pace.average_pace_s_per_km),
+            delta=_pace_delta(
+                current.pace.average_pace_s_per_km,
+                previous.pace.average_pace_s_per_km,
+            ),
+            previous=_format_prev_if_present(
+                _format_pace(previous.pace.average_pace_s_per_km)
+            ),
+        ),
+        CardMetric(
             label="Furthest activity",
             value=_format_km(current.distance.longest_km),
             delta=_format_pct(longest_pct),
