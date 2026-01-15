@@ -52,6 +52,7 @@ class PaceStats:
     """
 
     fastest_km_s: Optional[float]
+    average_pace_s_per_km: Optional[float]
 
 
 @dataclass(frozen=True)
@@ -114,6 +115,70 @@ def _fastest_km_seconds(splits: Sequence[Split]) -> Optional[float]:
     return float(min(split.elapsed_time_s for split in pool))
 
 
+def _compute_activity_totals(activities: Sequence[Activity]) -> tuple[float, int, float]:
+    """
+    Compute total distance (km), total moving time (seconds), and total elevation (m).
+    """
+    total_distance_km = _km(sum(activity.distance_m for activity in activities))
+    total_time_seconds = sum(activity.moving_time_s for activity in activities)
+    total_elevation_m = float(sum(activity.total_elevation_gain_m for activity in activities))
+    return total_distance_km, total_time_seconds, total_elevation_m
+
+
+def _average_pace_s_per_km(total_time_seconds: int, total_distance_km: float) -> Optional[float]:
+    """
+    Compute average pace (seconds per km), or None if distance is zero.
+    """
+    if total_distance_km <= 0:
+        return None
+    return float(total_time_seconds) / float(total_distance_km)
+
+
+def _build_period_metrics(
+    activities_in_window: Sequence[Activity],
+    splits_in_window: Sequence[Split],
+) -> tuple[float, DistanceStats, ElevationStats, PaceStats]:
+    """
+    Build derived metrics (time/distance/elevation/pace) for a window.
+    Returns (total_time_hours, distance_stats, elevation_stats, pace_stats).
+    """
+    activity_count = len(activities_in_window)
+
+    total_distance_km, total_time_seconds, total_elevation_m = _compute_activity_totals(
+        activities_in_window
+    )
+    total_time_hours = _hours(total_time_seconds)
+
+    longest_km = (
+        _km(max(activity.distance_m for activity in activities_in_window))
+        if activities_in_window
+        else None
+    )
+
+    average_km = total_distance_km / activity_count if activity_count > 0 else 0.0
+    average_elevation_m = total_elevation_m / activity_count if activity_count > 0 else 0.0
+
+    average_pace_s_per_km = _average_pace_s_per_km(total_time_seconds, total_distance_km)
+    fastest_km_s = _fastest_km_seconds(splits_in_window)
+
+    return (
+        total_time_hours,
+        DistanceStats(
+            total_km=total_distance_km,
+            average_km=average_km,
+            longest_km=longest_km,
+        ),
+        ElevationStats(
+            total_m=total_elevation_m,
+            average_m=average_elevation_m,
+        ),
+        PaceStats(
+            fastest_km_s=fastest_km_s,
+            average_pace_s_per_km=average_pace_s_per_km,
+        ),
+    )
+
+
 def compute_period_stats(
     window: Window, activities: Sequence[Activity], splits: Sequence[Split]
 ) -> PeriodStats:
@@ -137,12 +202,14 @@ def compute_period_stats(
     activities_in_window = [
         activity
         for activity in activities
-        if _in_range(
+        if activity.activity_type == "Run"
+        and _in_range(
             _parse_start_date_local(activity.start_date_local),
             window.start,
             window.end,
         )
     ]
+
     activity_ids = {activity.activity_id for activity in activities_in_window}
 
     splits_in_window = [
@@ -156,39 +223,18 @@ def compute_period_stats(
         )
     ]
 
-    activity_count = len(activities_in_window)
-
-    total_distance_km = _km(sum(activity.distance_m for activity in activities_in_window))
-    total_time_hours = _hours(sum(activity.moving_time_s for activity in activities_in_window))
-    total_elevation_m = float(
-        sum(activity.total_elevation_gain_m for activity in activities_in_window)
+    total_time_hours, distance_stats, elevation_stats, pace_stats = _build_period_metrics(
+        activities_in_window,
+        splits_in_window,
     )
-
-    longest_km: Optional[float] = None
-    if activities_in_window:
-        longest_km = _km(max(activity.distance_m for activity in activities_in_window))
-
-    average_km = total_distance_km / activity_count if activity_count > 0 else 0.0
-    average_elevation_m = total_elevation_m / activity_count if activity_count > 0 else 0.0
-
-    fastest_km_s = _fastest_km_seconds(splits_in_window)
 
     return PeriodStats(
         window=window,
-        activities=activity_count,
+        activities=len(activities_in_window),
         total_time_hours=total_time_hours,
-        distance=DistanceStats(
-            total_km=total_distance_km,
-            average_km=average_km,
-            longest_km=longest_km,
-        ),
-        elevation=ElevationStats(
-            total_m=total_elevation_m,
-            average_m=average_elevation_m,
-        ),
-        pace=PaceStats(
-            fastest_km_s=fastest_km_s,
-        ),
+        distance=distance_stats,
+        elevation=elevation_stats,
+        pace=pace_stats,
     )
 
 
