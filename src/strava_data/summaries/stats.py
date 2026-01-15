@@ -137,6 +137,7 @@ def compute_period_stats(
     activities_in_window = [
         activity
         for activity in activities
+        if activity.activity_type == "Run"
         if _in_range(
             _parse_start_date_local(activity.start_date_local),
             window.start,
