@@ -184,8 +184,15 @@ def _format_pace(seconds_per_km: Optional[float]) -> str:
     """
     if seconds_per_km is None or seconds_per_km <= 0:
         return "—"
+
     minutes = int(seconds_per_km // 60)
     seconds = int(round(seconds_per_km % 60))
+
+    # Guard against boundary rounding (e.g. 4:59.6 → 5:00)
+    if seconds == 60:
+        minutes += 1
+        seconds = 0
+
     return f"{minutes}:{seconds:02d} /km"
 
 
@@ -197,9 +204,16 @@ def _pace_delta(current: Optional[float], previous: Optional[float]) -> str:
     """
     if current is None or previous is None:
         return "—"
+
     diff = current - previous
-    sign = "−" if diff < 0 else "+"
-    return f"{sign}{abs(int(round(diff)))}s"
+    rounded = int(round(diff))
+
+    # Guard against boundary rounding (e.g. 59.6s → 60s)
+    if abs(rounded) == 60:
+        rounded = 59 if rounded > 0 else -59
+
+    sign = "−" if rounded < 0 else "+"
+    return f"{sign}{abs(rounded)}s"
 
 
 def _build_metrics(current: PeriodStats, previous: PeriodStats) -> Tuple[CardMetric, ...]:
