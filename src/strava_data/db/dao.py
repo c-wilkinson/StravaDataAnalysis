@@ -81,8 +81,7 @@ def init_database() -> None:
     conn = sqlite3.connect(TEMP_DB_FILE)
     cur = conn.cursor()
 
-    cur.execute(
-        """
+    cur.execute("""
         CREATE TABLE IF NOT EXISTS config (
             token_type TEXT,
             access_token TEXT,
@@ -90,11 +89,9 @@ def init_database() -> None:
             expires_in INTEGER,
             refresh_token TEXT
         );
-    """
-    )
+    """)
 
-    cur.execute(
-        """
+    cur.execute("""
         CREATE TABLE IF NOT EXISTS activities (
             activity_id INTEGER PRIMARY KEY,
             name TEXT,
@@ -108,11 +105,9 @@ def init_database() -> None:
             average_cadence REAL,
             is_outdoor INTEGER
         );
-    """
-    )
+    """)
 
-    cur.execute(
-        """
+    cur.execute("""
         CREATE TABLE IF NOT EXISTS splits (
             split_row_id INTEGER PRIMARY KEY AUTOINCREMENT,
             activity_id INTEGER,
@@ -127,8 +122,7 @@ def init_database() -> None:
             start_date_local TEXT,
             FOREIGN KEY(activity_id) REFERENCES activities(activity_id)
         );
-    """
-    )
+    """)
 
     conn.commit()
     conn.close()
@@ -158,13 +152,11 @@ def store_tokens(tokens: Dict[str, Any]) -> None:
 def read_tokens() -> Optional[Dict[str, Any]]:
     conn = sqlite3.connect(TEMP_DB_FILE)
     cur = conn.cursor()
-    cur.execute(
-        """
+    cur.execute("""
         SELECT token_type, access_token, expires_at, expires_in, refresh_token
         FROM config
         LIMIT 1;
-    """
-    )
+    """)
     row = cur.fetchone()
     conn.close()
 
