@@ -20,7 +20,7 @@ scikit-learn = "^1.8"
 [tool.poetry.group.dev.dependencies]
 pylint = "^4.0"
 pytest = "^9.0"
-black = "^26.1"
+black = "^26.3"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
