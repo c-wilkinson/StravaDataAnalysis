@@ -11,9 +11,9 @@ If other people start using this, I'll try and streamline this process as much a
 [![CodeQL](https://github.com/c-wilkinson/StravaDataAnalysis/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/c-wilkinson/StravaDataAnalysis/actions/workflows/codeql-analysis.yml)
 
 ## Generated Content
-📅 Stats last updated on: **2026-03-19 22:55:00**
+📅 Stats last updated on: **2026-03-20 03:27:58**
 
-🏃‍♂️ Most recent run: 0 years, 0 months, 1 days, 3 hours and 59 minutes
+🏃‍♂️ Most recent run: 0 years, 0 months, 1 days, 8 hours and 32 minutes
 
 ![1 Summary Card Weekly](assets/1_summary_card_weekly.png?raw=true "1 Summary Card Weekly")
 
