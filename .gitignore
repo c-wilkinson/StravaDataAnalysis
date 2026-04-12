@@ -1,5 +1,5 @@
 config.txt
-strava_temp.sqlite
+*.sqlite
 *.lock
 
 # Byte-compiled / optimized / DLL files
