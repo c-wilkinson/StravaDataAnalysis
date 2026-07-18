@@ -26,7 +26,13 @@ def transform_activities(activities_df: pd.DataFrame) -> pd.DataFrame:
 
     if "average_cadence" not in activities_clean.columns:
         activities_clean["average_cadence"] = 0.0
+    if "average_heartrate" not in activities_clean.columns:
+        activities_clean["average_heartrate"] = np.nan
+    if "max_heartrate" not in activities_clean.columns:
+        activities_clean["max_heartrate"] = np.nan
 
+    trainer = activities_clean.get("trainer", pd.Series(False, index=activities_clean.index))
+    activities_clean["is_outdoor"] = ~trainer.fillna(False).astype(bool)
     activities_clean["start_date_local"] = activities_clean["start_date_local"]
     activities_clean["activity_type"] = np.where(
         activities_clean["type"].str.lower() == "run", "Run", activities_clean["type"]
@@ -43,6 +49,9 @@ def transform_activities(activities_df: pd.DataFrame) -> pd.DataFrame:
         "total_elevation_gain_m",
         "start_date_local",
         "average_cadence",
+        "average_heartrate",
+        "max_heartrate",
+        "is_outdoor",
     ]
 
     return activities_clean[final_cols].copy()

@@ -18,6 +18,7 @@ from strava_data.db.dao import (
     load_all_activities,
     load_all_splits,
 )
+from strava_data.db.parquet import export_dashboard_parquet
 from strava_data.strava_api.client import fetch_activities, fetch_splits_if_needed
 from strava_data.strava_api.processing.transform import transform_activities, transform_splits
 from strava_data.strava_api.visualisation import (
@@ -83,6 +84,8 @@ def generate_charts_from_db() -> None:
     """
     all_activities = load_all_activities()
     all_splits = load_all_splits()
+    LOGGER.info("Generating dashboard Parquet datasets...")
+    export_dashboard_parquet(all_activities, all_splits)
     generate_required_charts(all_activities, all_splits)
     LOGGER.info("Running pace forecast pipeline...")
     run_forecast_pipeline(all_splits, Path(OUTPUT_DIR))

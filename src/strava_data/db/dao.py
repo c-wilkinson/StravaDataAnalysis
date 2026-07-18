@@ -103,6 +103,8 @@ def init_database() -> None:
             total_elevation_gain_m REAL,
             start_date_local TEXT,
             average_cadence REAL,
+            average_heartrate REAL,
+            max_heartrate REAL,
             is_outdoor INTEGER
         );
     """)
@@ -124,8 +126,19 @@ def init_database() -> None:
         );
     """)
 
+    _ensure_column(cur, "activities", "average_heartrate", "REAL")
+    _ensure_column(cur, "activities", "max_heartrate", "REAL")
+    _ensure_column(cur, "activities", "is_outdoor", "INTEGER")
+
     conn.commit()
     conn.close()
+
+
+def _ensure_column(cursor, table: str, column: str, column_type: str) -> None:
+    """Add a database column when an existing encrypted database predates it."""
+    existing = {row[1] for row in cursor.execute(f"PRAGMA table_info({table});")}
+    if column not in existing:
+        cursor.execute(f"ALTER TABLE {table} ADD COLUMN {column} {column_type};")
 
 
 def store_tokens(tokens: Dict[str, Any]) -> None:
@@ -192,9 +205,11 @@ def insert_activities(activities_df: pd.DataFrame) -> None:
                 total_elevation_gain_m,
                 start_date_local,
                 average_cadence,
+                average_heartrate,
+                max_heartrate,
                 is_outdoor
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
         """,
             (
                 row.get("id"),
@@ -207,6 +222,8 @@ def insert_activities(activities_df: pd.DataFrame) -> None:
                 row.get("total_elevation_gain_m", 0.0),
                 row.get("start_date_local", ""),
                 row.get("average_cadence", 0.0),
+                row.get("average_heartrate", None),
+                row.get("max_heartrate", None),
                 row.get("is_outdoor", 1 if row.get("is_outdoor") else 0),
             ),
         )

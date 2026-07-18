@@ -2,14 +2,23 @@
 Contains the pace chart functions, each saving a PNG file.
 """
 
+# pylint: disable=duplicate-code
+
 import calendar
 import matplotlib.dates as mdates
 from matplotlib import ticker
 import numpy as np
 import pandas as pd
 import seaborn as sns
+import plotly.express as px
+import plotly.graph_objects as go
 
-from strava_data.strava_api.visualisation import utils
+from strava_data.strava_api.processing.analytics import (
+    monthly_pace,
+    pace_over_time,
+    pace_variability,
+)
+from strava_data.strava_api.visualisation import interactive_utils, utils
 
 
 def plot_pace_vs_elevation_change(splits_df: pd.DataFrame, output_path: str) -> None:
@@ -280,3 +289,122 @@ def plot_pace_variability_per_run(splits_df: pd.DataFrame, output_path: str) -> 
         plot_func=plot_fn,
     )
     # pylint: enable=R0801
+
+
+def build_running_pace_figure(splits_df: pd.DataFrame) -> go.Figure:
+    """Build an interactive version of running pace over time."""
+    data = pace_over_time(splits_df)
+    if data.empty:
+        return go.Figure()
+    figure = px.scatter(
+        data,
+        x="activity_date",
+        y="pace_sec_km",
+        color=data["year"].astype(str),
+        labels={"activity_date": "Date", "pace_sec_km": "Pace", "color": "Year"},
+        hover_data={
+            "activity_id": True,
+            "split_index": True,
+            "activity_date": "|%d %B %Y",
+            "pace_sec_km": ":.0f",
+        },
+    )
+    interactive_utils.add_linear_trend(figure, data["activity_date"], data["pace_sec_km"])
+    interactive_utils.apply_layout(figure, "Running pace over time")
+    return interactive_utils.apply_pace_axis(figure, data["pace_sec_km"])
+
+
+def build_fastest_1km_pace_figure(splits_df: pd.DataFrame) -> go.Figure:
+    """Build an interactive fastest one-kilometre pace chart."""
+    data = monthly_pace(splits_df)
+    if data.empty:
+        return go.Figure()
+    figure = px.line(
+        data,
+        x="month_start",
+        y="fastest_pace_sec_km",
+        markers=True,
+        labels={"month_start": "Month", "fastest_pace_sec_km": "Pace"},
+        hover_data={"month_start": "|%B %Y", "fastest_pace_sec_km": ":.0f"},
+    )
+    interactive_utils.apply_layout(figure, "Fastest 1 km pace over time")
+    return interactive_utils.apply_pace_axis(figure, data["fastest_pace_sec_km"])
+
+
+def build_median_1km_pace_figure(splits_df: pd.DataFrame) -> go.Figure:
+    """Build an interactive median one-kilometre pace chart."""
+    data = monthly_pace(splits_df)
+    if data.empty:
+        return go.Figure()
+    figure = px.line(
+        data,
+        x="month_start",
+        y="median_pace_sec_km",
+        markers=True,
+        labels={"month_start": "Month", "median_pace_sec_km": "Pace"},
+        hover_data={"month_start": "|%B %Y", "median_pace_sec_km": ":.0f"},
+    )
+    interactive_utils.apply_layout(figure, "Median 1 km pace over time")
+    return interactive_utils.apply_pace_axis(figure, data["median_pace_sec_km"])
+
+
+def build_pace_vs_elevation_figure(splits_df: pd.DataFrame) -> go.Figure:
+    """Build an interactive pace-versus-elevation-change chart."""
+    data = pace_over_time(splits_df)
+    if data.empty:
+        return go.Figure()
+    data = data[data["elevation_difference_m"].between(-100, 100)]
+    figure = px.scatter(
+        data,
+        x="elevation_difference_m",
+        y="pace_sec_km",
+        color=data["year"].astype(str),
+        labels={
+            "elevation_difference_m": "Elevation change (m)",
+            "pace_sec_km": "Pace",
+            "color": "Year",
+        },
+        hover_data={"activity_date": "|%d %B %Y", "activity_id": True, "split_index": True},
+    )
+    interactive_utils.add_linear_trend(figure, data["elevation_difference_m"], data["pace_sec_km"])
+    interactive_utils.apply_layout(figure, "Running pace vs elevation change")
+    return interactive_utils.apply_pace_axis(figure, data["pace_sec_km"])
+
+
+def build_pace_by_day_figure(splits_df: pd.DataFrame) -> go.Figure:
+    """Build an interactive pace-by-day-of-week chart."""
+    data = pace_over_time(splits_df)
+    if data.empty:
+        return go.Figure()
+    weekday_order = list(calendar.day_name)
+    data["weekday"] = pd.Categorical(data["weekday"], categories=weekday_order, ordered=True)
+    figure = px.box(
+        data,
+        x="weekday",
+        y="pace_sec_km",
+        points="outliers",
+        category_orders={"weekday": weekday_order},
+        labels={"weekday": "Day", "pace_sec_km": "Pace"},
+    )
+    figure.update_xaxes(categoryorder="array", categoryarray=weekday_order)
+    interactive_utils.apply_layout(figure, "Pace by day of week")
+    return interactive_utils.apply_pace_axis(figure, data["pace_sec_km"])
+
+
+def build_pace_variability_figure(splits_df: pd.DataFrame) -> go.Figure:
+    """Build an interactive pace consistency chart."""
+    data = pace_variability(splits_df)
+    if data.empty:
+        return go.Figure()
+    figure = px.line(
+        data,
+        x="activity_date",
+        y="pace_std_sec_km",
+        markers=True,
+        labels={"activity_date": "Date", "pace_std_sec_km": "Pace variation"},
+        hover_data={"activity_id": True, "split_count": True, "activity_date": "|%d %B %Y"},
+    )
+    interactive_utils.apply_layout(figure, "Pace consistency by run")
+    return interactive_utils.apply_pace_axis(
+        figure, data["pace_std_sec_km"], "Standard deviation (min/km)"
+    )

@@ -2,14 +2,27 @@
 Contains the distance chart functions, each saving a PNG file.
 """
 
+# pylint: disable=duplicate-code
+
 import calendar
 from datetime import datetime
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from matplotlib import ticker
+import numpy as np
+import plotly.express as px
+import plotly.graph_objects as go
 
-from strava_data.strava_api.visualisation import utils
+from strava_data.strava_api.processing.analytics import (
+    cumulative_distance,
+    longest_run_by_month,
+    monthly_distance,
+    prepare_activities,
+    prepare_splits,
+    rolling_distance,
+)
+from strava_data.strava_api.visualisation import interactive_utils, utils
 
 
 def plot_time_taken_over_distances(activities_df: pd.DataFrame, output_path: str) -> None:
@@ -392,3 +405,161 @@ def plot_longest_run_per_month(activities_df: pd.DataFrame, output_path: str) ->
         plot_func=plot_fn,
     )
     # pylint: enable=R0801
+
+
+def build_monthly_distance_figure(activities_df: pd.DataFrame) -> go.Figure:
+    """Build an interactive version of total distance run by month."""
+    data = monthly_distance(activities_df)
+    if data.empty:
+        return go.Figure()
+    figure = px.line(
+        data,
+        x="month_start",
+        y="distance_km",
+        markers=True,
+        labels={"month_start": "Month", "distance_km": "Distance (km)"},
+        hover_data={"month_start": "|%B %Y", "distance_km": ":.1f"},
+    )
+    return interactive_utils.apply_layout(figure, "Monthly distance", "Distance (km)")
+
+
+def build_monthly_distance_by_year_figure(activities_df: pd.DataFrame) -> go.Figure:
+    """Build an interactive year-over-year monthly distance comparison."""
+    data = monthly_distance(activities_df)
+    if data.empty:
+        return go.Figure()
+    month_names = list(calendar.month_abbr)[1:]
+    data["month_name"] = pd.Categorical(
+        data["month"].map(dict(enumerate(month_names, start=1))),
+        categories=month_names,
+        ordered=True,
+    )
+    data = data.sort_values(["year", "month"])
+    figure = px.line(
+        data,
+        x="month_name",
+        y="distance_km",
+        color=data["year"].astype(str),
+        markers=True,
+        category_orders={"month_name": month_names},
+        labels={"month_name": "Month", "distance_km": "Distance (km)", "color": "Year"},
+        hover_data={"year": True, "distance_km": ":.1f"},
+    )
+    figure.update_xaxes(categoryorder="array", categoryarray=month_names)
+    return interactive_utils.apply_layout(figure, "Monthly distance by year", "Distance (km)")
+
+
+def build_cumulative_distance_figure(activities_df: pd.DataFrame) -> go.Figure:
+    """Build an interactive cumulative distance chart."""
+    data = cumulative_distance(activities_df)
+    if data.empty:
+        return go.Figure()
+    figure = px.line(
+        data,
+        x="activity_date",
+        y="cumulative_distance_km",
+        labels={"activity_date": "Date", "cumulative_distance_km": "Distance (km)"},
+        hover_data={"activity_date": "|%d %B %Y", "cumulative_distance_km": ":.1f"},
+    )
+    return interactive_utils.apply_layout(figure, "Cumulative distance", "Distance (km)")
+
+
+def build_rolling_distance_figure(activities_df: pd.DataFrame, window_days: int = 30) -> go.Figure:
+    """Build an interactive rolling distance chart."""
+    data = rolling_distance(activities_df, window_days=window_days)
+    if data.empty:
+        return go.Figure()
+    figure = px.line(
+        data,
+        x="activity_date",
+        y="rolling_distance_km",
+        labels={"activity_date": "Date", "rolling_distance_km": "Distance (km)"},
+        hover_data={"activity_date": "|%d %B %Y", "rolling_distance_km": ":.1f"},
+    )
+    return interactive_utils.apply_layout(
+        figure, f"Rolling {window_days}-day distance", "Distance (km)"
+    )
+
+
+def build_longest_run_figure(activities_df: pd.DataFrame) -> go.Figure:
+    """Build an interactive longest-run-per-month chart."""
+    data = longest_run_by_month(activities_df)
+    if data.empty:
+        return go.Figure()
+    figure = px.bar(
+        data,
+        x="month_start",
+        y="distance_km",
+        hover_name="name",
+        labels={"month_start": "Month", "distance_km": "Distance (km)"},
+        hover_data={"activity_date": "|%d %B %Y", "distance_km": ":.2f"},
+    )
+    return interactive_utils.apply_layout(figure, "Longest run per month", "Distance (km)")
+
+
+def build_time_distance_figure(activities_df: pd.DataFrame) -> go.Figure:
+    """Build an interactive time-taken-over-distance chart."""
+    data = prepare_activities(activities_df)
+    if data.empty:
+        return go.Figure()
+    data = data[data["distance_km"] >= 0.5].copy()
+    data["moving_time_minutes"] = data["moving_time_s"] / 60.0
+    figure = px.scatter(
+        data,
+        x="distance_km",
+        y="moving_time_minutes",
+        color=data["year"].astype(str),
+        hover_name="name",
+        labels={
+            "distance_km": "Distance (km)",
+            "moving_time_minutes": "Moving time (minutes)",
+            "color": "Year",
+        },
+        hover_data={"activity_date": "|%d %B %Y", "distance_km": ":.2f"},
+    )
+    interactive_utils.add_linear_trend(figure, data["distance_km"], data["moving_time_minutes"])
+    return interactive_utils.apply_layout(
+        figure, "Time taken over distance", "Moving time (minutes)"
+    )
+
+
+def build_number_of_runs_by_distance_figure(activities_df: pd.DataFrame) -> go.Figure:
+    """Build an interactive number-of-runs-per-distance chart."""
+    data = prepare_activities(activities_df)
+    if data.empty:
+        return go.Figure()
+    data["distance_bucket"] = data["distance_km"].round().astype(int)
+    grouped = data.groupby("distance_bucket", as_index=False).size()
+    grouped = grouped.rename(columns={"size": "runs"})
+    figure = px.bar(
+        grouped,
+        x="distance_bucket",
+        y="runs",
+        labels={"distance_bucket": "Rounded distance (km)", "runs": "Runs"},
+    )
+    return interactive_utils.apply_layout(figure, "Number of runs per distance", "Runs")
+
+
+def build_pace_vs_total_distance_figure(splits_df: pd.DataFrame) -> go.Figure:
+    """Build an interactive running-pace-versus-total-distance chart."""
+    data = prepare_splits(splits_df)
+    if data.empty:
+        return go.Figure()
+    grouped = data.groupby(["activity_id", "activity_date"], as_index=False).agg(
+        distance_m=("distance_m", "sum"),
+        elapsed_time_s=("elapsed_time_s", "sum"),
+    )
+    grouped["distance_km"] = grouped["distance_m"] / 1000.0
+    valid_distance = grouped["distance_km"].where(grouped["distance_km"] > 0)
+    grouped["pace_sec_km"] = grouped["elapsed_time_s"] / valid_distance
+    grouped = grouped.replace([np.inf, -np.inf], np.nan).dropna(subset=["pace_sec_km"])
+    figure = px.scatter(
+        grouped,
+        x="distance_km",
+        y="pace_sec_km",
+        labels={"distance_km": "Distance (km)", "pace_sec_km": "Pace"},
+        hover_data={"activity_date": "|%d %B %Y", "activity_id": True},
+    )
+    interactive_utils.add_linear_trend(figure, grouped["distance_km"], grouped["pace_sec_km"])
+    interactive_utils.apply_layout(figure, "Running pace vs total distance")
+    return interactive_utils.apply_pace_axis(figure, grouped["pace_sec_km"])

@@ -1,0 +1,13 @@
+{
+  "generated_at_utc": "2026-07-18T14:34:21+00:00",
+  "activity_count": 664,
+  "split_count": 4611,
+  "first_activity_date": "2020-11-29",
+  "last_activity_date": "2026-05-06",
+  "privacy": {
+    "activity_names": "included",
+    "activity_dates": "included",
+    "heart_rate": "included when available",
+    "precise_start_times": "removed"
+  }
+}

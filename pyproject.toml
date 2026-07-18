@@ -1,10 +1,13 @@
 [tool.poetry]
 name = "strava_project"
-version = "0.1.1"
+version = "1.0.0"
 description = "Codebase for Strava data analysis."
 authors = ["Craig Wilkinson"]
 readme = "README.md"
-packages = [{ include = "src" }]
+packages = [
+    { include = "strava_data", from = "src" },
+    { include = "dashboard", from = "src" },
+]
 
 [tool.poetry.dependencies]
 python = "^3.11"
@@ -16,6 +19,9 @@ pyAesCrypt = "^6.0"
 cryptography = ">=44.0.1"
 numpy = "^2.4"
 scikit-learn = "^1.8"
+plotly = "^6.9"
+streamlit = "^1.59.2"
+pyarrow = "^24.0"
 
 [tool.poetry.group.dev.dependencies]
 pylint = "^4.0"
@@ -56,5 +62,6 @@ max-line-length = 100
 disable = [
     "missing-docstring",
     "too-few-public-methods",
-    "too-many-arguments"
+    "too-many-arguments",
+    "duplicate-code"
 ]
