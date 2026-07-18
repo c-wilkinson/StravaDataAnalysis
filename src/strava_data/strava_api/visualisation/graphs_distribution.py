@@ -2,14 +2,25 @@
 Contains the distribution chart functions, each saving a PNG file.
 """
 
+# pylint: disable=duplicate-code
+
 import calendar
 from matplotlib import ticker
 from matplotlib.colors import ListedColormap, BoundaryNorm
 import numpy as np
 import pandas as pd
 import seaborn as sns
+import plotly.express as px
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
-from strava_data.strava_api.visualisation import utils
+from strava_data.strava_api.processing.analytics import (
+    heart_rate_zones,
+    pace_over_time,
+    prepare_activities,
+    run_rest_summary,
+)
+from strava_data.strava_api.visualisation import interactive_utils, utils
 
 
 def plot_run_distance_distribution(activities_df: pd.DataFrame, output_path: str) -> None:
@@ -374,3 +385,209 @@ def plot_heatmap_activities(activities_df: pd.DataFrame, output_path: str) -> No
         plot_func=plot_fn,
     )
     # pylint: enable=R0801
+
+
+def _activity_calendar_year_grid(
+    daily: pd.DataFrame, year: int, weekday_order: list[str]
+) -> tuple[list[int], np.ndarray, np.ndarray]:
+    """Return week numbers, distances and hover data for one calendar year."""
+    year_start = pd.Timestamp(year=year, month=1, day=1)
+    year_end = pd.Timestamp(year=year, month=12, day=31)
+    calendar_data = pd.DataFrame({"activity_date": pd.date_range(year_start, year_end, freq="D")})
+    calendar_data = calendar_data.merge(daily, on="activity_date", how="left")
+    calendar_data[["distance_km", "activities"]] = calendar_data[
+        ["distance_km", "activities"]
+    ].fillna(0)
+    first_monday = year_start - pd.Timedelta(days=year_start.weekday())
+    calendar_data["week"] = ((calendar_data["activity_date"] - first_monday).dt.days // 7) + 1
+    calendar_data["weekday"] = calendar_data["activity_date"].dt.day_name()
+    calendar_data["date_label"] = calendar_data["activity_date"].dt.strftime("%d %B %Y")
+
+    weeks = list(range(1, int(calendar_data["week"].max()) + 1))
+    distance_grid = calendar_data.pivot(
+        index="weekday", columns="week", values="distance_km"
+    ).reindex(index=weekday_order, columns=weeks)
+    activity_grid = calendar_data.pivot(
+        index="weekday", columns="week", values="activities"
+    ).reindex(index=weekday_order, columns=weeks)
+    date_grid = calendar_data.pivot(index="weekday", columns="week", values="date_label").reindex(
+        index=weekday_order, columns=weeks
+    )
+    custom_data = np.empty((*distance_grid.shape, 2), dtype=object)
+    custom_data[:, :, 0] = date_grid.fillna("").to_numpy()
+    custom_data[:, :, 1] = activity_grid.fillna(0).to_numpy()
+    return weeks, distance_grid.to_numpy(), custom_data
+
+
+def build_activity_heatmap_figure(activities_df: pd.DataFrame) -> go.Figure:
+    """Build one readable Monday-to-Sunday activity calendar for each year."""
+    data = prepare_activities(activities_df)
+    if data.empty:
+        return go.Figure()
+
+    daily = data.groupby("activity_date", as_index=False).agg(
+        distance_km=("distance_km", "sum"),
+        activities=("activity_id", "count"),
+    )
+    years = sorted(daily["activity_date"].dt.year.unique())
+    weekday_order = list(calendar.day_name)
+    figure = make_subplots(
+        rows=len(years),
+        cols=1,
+        subplot_titles=[str(year) for year in years],
+        vertical_spacing=min(0.08, 0.35 / max(len(years), 1)),
+    )
+
+    for row_number, year in enumerate(years, start=1):
+        weeks, distance_grid, custom_data = _activity_calendar_year_grid(daily, year, weekday_order)
+        figure.add_trace(
+            go.Heatmap(
+                x=weeks,
+                y=weekday_order,
+                z=distance_grid,
+                customdata=custom_data,
+                coloraxis="coloraxis",
+                hovertemplate=(
+                    "%{customdata[0]}<br>Distance: %{z:.2f} km<br>"
+                    "Activities: %{customdata[1]:.0f}<extra></extra>"
+                ),
+            ),
+            row=row_number,
+            col=1,
+        )
+        figure.update_xaxes(
+            title_text="Week of year" if row_number == len(years) else "",
+            tickmode="linear",
+            tick0=1,
+            dtick=4,
+            row=row_number,
+            col=1,
+        )
+        figure.update_yaxes(
+            categoryorder="array",
+            categoryarray=weekday_order,
+            autorange="reversed",
+            row=row_number,
+            col=1,
+        )
+
+    interactive_utils.apply_layout(figure, "Activity calendar")
+    figure.update_layout(
+        coloraxis={
+            "colorscale": "Blues",
+            "colorbar": {"title": "Distance (km)"},
+        },
+        height=max(360, 150 * len(years)),
+        hovermode="closest",
+    )
+    return figure
+
+
+def build_run_distance_distribution_figure(activities_df: pd.DataFrame) -> go.Figure:
+    """Build an interactive run-distance distribution chart."""
+    data = prepare_activities(activities_df)
+    if data.empty:
+        return go.Figure()
+    figure = px.histogram(
+        data,
+        x="distance_km",
+        color=data["year"].astype(str),
+        barmode="overlay",
+        nbins=30,
+        labels={"distance_km": "Distance (km)", "count": "Runs", "color": "Year"},
+        hover_data={"name": True, "activity_date": "|%d %B %Y"},
+    )
+    figure.update_traces(opacity=0.65)
+    return interactive_utils.apply_layout(figure, "Run distance distribution", "Runs")
+
+
+def build_pace_distribution_figure(splits_df: pd.DataFrame) -> go.Figure:
+    """Build an interactive one-kilometre pace distribution chart."""
+    data = pace_over_time(splits_df)
+    if data.empty:
+        return go.Figure()
+    figure = px.histogram(
+        data,
+        x="pace_sec_km",
+        color=data["year"].astype(str),
+        barmode="overlay",
+        nbins=35,
+        labels={"pace_sec_km": "Pace", "count": "Splits", "color": "Year"},
+    )
+    figure.update_traces(opacity=0.65)
+    tick_values, tick_text = interactive_utils.pace_tick_values(data["pace_sec_km"])
+    figure.update_xaxes(title_text="Pace (min/km)", tickvals=tick_values, ticktext=tick_text)
+    return interactive_utils.apply_layout(figure, "Pace distribution", "Splits")
+
+
+def build_elevation_distribution_figure(activities_df: pd.DataFrame) -> go.Figure:
+    """Build an interactive elevation-gain distribution chart."""
+    data = prepare_activities(activities_df)
+    if data.empty:
+        return go.Figure()
+    data = data[data["total_elevation_gain_m"] > 0]
+    figure = px.histogram(
+        data,
+        x="total_elevation_gain_m",
+        color=data["year"].astype(str),
+        barmode="overlay",
+        nbins=35,
+        labels={
+            "total_elevation_gain_m": "Elevation gain (m)",
+            "count": "Runs",
+            "color": "Year",
+        },
+    )
+    figure.update_traces(opacity=0.65)
+    return interactive_utils.apply_layout(figure, "Elevation gain distribution", "Runs")
+
+
+def build_heart_rate_zone_figure(splits_df: pd.DataFrame) -> go.Figure:
+    """Build an interactive training-intensity-by-heart-rate-zone chart."""
+    data = heart_rate_zones(splits_df)
+    if data.empty:
+        return go.Figure()
+    figure = px.bar(
+        data,
+        x="month_start",
+        y="time_minutes",
+        color="heart_rate_zone",
+        barmode="stack",
+        labels={
+            "month_start": "Month",
+            "time_minutes": "Time (minutes)",
+            "heart_rate_zone": "Heart-rate zone",
+        },
+    )
+    return interactive_utils.apply_layout(
+        figure, "Training intensity by heart-rate zone", "Time (minutes)"
+    )
+
+
+def build_run_rest_heatmap_figure(activities_df: pd.DataFrame, value: str) -> go.Figure:
+    """Build an interactive run-day, rest-day or run-day-ratio heatmap."""
+    data = run_rest_summary(activities_df)
+    if data.empty:
+        return go.Figure()
+    allowed_values = {
+        "run_days": "Run days",
+        "rest_days": "Rest days",
+        "run_day_ratio": "Run-day ratio",
+    }
+    if value not in allowed_values:
+        raise ValueError(f"Unsupported run/rest heatmap value: {value}")
+    pivot = data.pivot(index="year", columns="month", values=value)
+    pivot = pivot.reindex(columns=range(1, 13))
+    month_names = list(calendar.month_abbr)[1:]
+    figure = go.Figure(
+        data=go.Heatmap(
+            z=pivot.values,
+            x=month_names,
+            y=pivot.index.astype(str),
+            colorbar={"title": allowed_values[value]},
+            hovertemplate="Year %{y}<br>%{x}<br>Value %{z:.2f}<extra></extra>",
+        )
+    )
+    figure.update_xaxes(title_text="Month")
+    figure.update_yaxes(title_text="Year")
+    return interactive_utils.apply_layout(figure, f"{allowed_values[value]} by month")

@@ -2,12 +2,22 @@
 Contains the effort chart functions, each saving a PNG file.
 """
 
+# pylint: disable=duplicate-code
+
 import matplotlib.dates as mdates
 import numpy as np
 import pandas as pd
 import seaborn as sns
+import plotly.express as px
+import plotly.graph_objects as go
 
-from strava_data.strava_api.visualisation import utils
+from strava_data.strava_api.processing.analytics import (
+    monthly_elevation_per_km,
+    monthly_vo2_proxy,
+    prepare_activities,
+    training_load,
+)
+from strava_data.strava_api.visualisation import interactive_utils, utils
 
 
 def plot_elevation_gain_per_km_by_month(activities_df: pd.DataFrame, output_path: str) -> None:
@@ -163,3 +173,73 @@ def plot_vo2_proxy_over_time(splits_df: pd.DataFrame, output_path: str) -> None:
         plot_func=plot_fn,
     )
     # pylint: enable=R0801
+
+
+def build_cadence_figure(activities_df: pd.DataFrame) -> go.Figure:
+    """Build an interactive average cadence chart."""
+    data = prepare_activities(activities_df)
+    if data.empty:
+        return go.Figure()
+    data = data[data["average_cadence"] > 0]
+    figure = px.scatter(
+        data,
+        x="activity_date",
+        y="average_cadence",
+        hover_name="name",
+        labels={"activity_date": "Date", "average_cadence": "Cadence"},
+        hover_data={"activity_date": "|%d %B %Y", "distance_km": ":.2f"},
+    )
+    interactive_utils.add_linear_trend(figure, data["activity_date"], data["average_cadence"])
+    return interactive_utils.apply_layout(figure, "Average cadence over time", "Cadence")
+
+
+def build_elevation_per_km_figure(activities_df: pd.DataFrame) -> go.Figure:
+    """Build an interactive elevation-gain-per-kilometre chart."""
+    data = monthly_elevation_per_km(activities_df)
+    if data.empty:
+        return go.Figure()
+    figure = px.line(
+        data,
+        x="month_start",
+        y="elevation_per_km",
+        markers=True,
+        labels={"month_start": "Month", "elevation_per_km": "Elevation gain (m/km)"},
+        hover_data={"month_start": "|%B %Y", "elevation_per_km": ":.1f"},
+    )
+    return interactive_utils.apply_layout(
+        figure, "Elevation gain per km by month", "Elevation gain (m/km)"
+    )
+
+
+def build_training_load_figure(activities_df: pd.DataFrame) -> go.Figure:
+    """Build an interactive training-load chart."""
+    data = training_load(activities_df)
+    if data.empty:
+        return go.Figure()
+    figure = px.line(
+        data,
+        x="activity_date",
+        y="rolling_effort",
+        labels={"activity_date": "Date", "rolling_effort": "Effort score"},
+        hover_name="name",
+        hover_data={"effort_score": ":.1f", "rolling_effort": ":.1f"},
+    )
+    return interactive_utils.apply_layout(
+        figure, "Training load over time", "Seven-activity average effort"
+    )
+
+
+def build_vo2_proxy_figure(splits_df: pd.DataFrame) -> go.Figure:
+    """Build an interactive version of the VO2 proxy chart."""
+    data = monthly_vo2_proxy(splits_df)
+    if data.empty:
+        return go.Figure()
+    figure = px.line(
+        data,
+        x="month_start",
+        y="vo2_proxy",
+        markers=True,
+        labels={"month_start": "Month", "vo2_proxy": "VO₂ proxy"},
+        hover_data={"month_start": "|%B %Y", "vo2_proxy": ":.1f"},
+    )
+    return interactive_utils.apply_layout(figure, "Estimated VO₂ proxy over time", "VO₂ proxy")
