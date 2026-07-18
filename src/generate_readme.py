@@ -77,6 +77,7 @@ def generate_readme() -> None:
             "codeql-analysis.yml)\n\n"
         )
         handle.write("## Generated Content\n")
+        handle.write("🌐 [Activities Dashboard](https://strava-data-analysis.streamlit.app/)\n")
         handle.write(f"📅 Stats last updated on: **{last_updated}**\n\n")
         handle.write(f"🏃‍♂️ Most recent run: {time_string}\n\n")
 
