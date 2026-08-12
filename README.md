@@ -13,9 +13,9 @@ If other people start using this, I'll try and streamline this process as much a
 ## Generated Content
 🌐 [Activities Dashboard](https://strava-data-analysis.streamlit.app/)
 
-📅 Stats last updated on: **2026-08-11 23:23:00**
+📅 Stats last updated on: **2026-08-12 03:21:01**
 
-🏃‍♂️ Most recent run: 0 years, 3 months, 5 days, 5 hours and 9 minutes
+🏃‍♂️ Most recent run: 0 years, 3 months, 5 days, 9 hours and 7 minutes
 
 ![1 Summary Card Weekly](assets/1_summary_card_weekly.png?raw=true "1 Summary Card Weekly")
 
