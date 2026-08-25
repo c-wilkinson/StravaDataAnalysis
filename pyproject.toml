@@ -21,7 +21,7 @@ numpy = "^2.4"
 scikit-learn = "^1.8"
 plotly = "^6.9"
 streamlit = "^1.59.2"
-pyarrow = "^24.0"
+pyarrow = ">=24,<26"
 
 [tool.poetry.group.dev.dependencies]
 pylint = "^4.0"
