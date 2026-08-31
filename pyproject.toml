@@ -19,7 +19,7 @@ pyAesCrypt = "^6.0"
 cryptography = ">=44.0.1"
 numpy = "^2.4"
 scikit-learn = "^1.8"
-plotly = "^6.9"
+plotly = ">=6.9,<8.0"
 streamlit = "^1.59.2"
 pyarrow = ">=24,<26"
 
