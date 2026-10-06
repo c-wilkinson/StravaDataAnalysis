@@ -2266,14 +2266,14 @@ full = ["httpx (>=0.27.0,<0.29.0)", "httpx2 (>=2.0.0)", "itsdangerous", "jinja2"
 
 [[package]]
 name = "streamlit"
-version = "1.64.0"
+version = "1.65.0"
 description = "A faster way to build and share data apps"
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "streamlit-1.64.0-py3-none-any.whl", hash = "sha256:4daf63aa9eaa5452d0edc64a5bdb0c4ad25580fe3c62c270455f3c43e9db5098"},
-    {file = "streamlit-1.64.0.tar.gz", hash = "sha256:5c3f9a9dec13b5c5197a9c764ebf1a9d77f9e19c1b4af008779cb45c368961a3"},
+    {file = "streamlit-1.65.0-py3-none-any.whl", hash = "sha256:517a7254e223f4986d2b2e0745d02acf8ca64656943e63e422d345ce34a7495b"},
+    {file = "streamlit-1.65.0.tar.gz", hash = "sha256:42acd9ebdf3576a35584977c48a044ec0b5d3e4997fa9248809b9891598ac6a0"},
 ]
 
 [package.dependencies]
@@ -2296,13 +2296,13 @@ toml = ">=0.10.1,<2"
 typing-extensions = ">=4.10.0,<5"
 uvicorn = ">=0.30.0,<1"
 watchdog = {version = ">=2.1.5,<7", markers = "platform_system != \"Darwin\""}
-websockets = ">=12.0.0,<17"
+websockets = ">=12.0.0,<18"
 
 [package.extras]
 all = ["rich (>=11.0.0)", "streamlit[auth,charts,pdf,performance,snowflake,sql]"]
 auth = ["Authlib (>=1.3.2)", "httpx (>=0.24.1)"]
 charts = ["graphviz (>=0.19.0)", "matplotlib (>=3.0.0)", "orjson (>=3.5.0)", "plotly (>=4.0.0)"]
-pdf = ["streamlit-pdf (>=1.0.0)"]
+pdf = ["streamlit-pdf (>=2.1.0)"]
 performance = ["orjson (>=3.5.0)", "uvloop (>=0.15.2) ; sys_platform != \"win32\" and sys_platform != \"cygwin\" and platform_python_implementation != \"PyPy\""]
 snowflake = ["snowflake-connector-python (>=3.3.0)", "snowflake-snowpark-python[modin] (>=1.17.0)"]
 sql = ["SQLAlchemy (>=2.0.0)"]
