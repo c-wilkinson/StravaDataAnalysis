@@ -1,0 +1,79 @@
+name: Dependabot remediation
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Run Python tests
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.pull_request.user.login == 'dependabot[bot]'
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Poetry
+        run: python -m pip install poetry
+
+      - name: Install dependencies
+        run: poetry install --no-interaction
+
+      - name: Validate project
+        run: poetry check --lock
+
+      - name: Run pytest
+        run: |
+          mkdir -p test-results
+          poetry run pytest src/tests \
+            --junitxml=test-results/pytest.xml
+
+      - name: Publish test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-results
+          path: test-results/
+          if-no-files-found: warn
+
+  merge:
+    name: Enable Dependabot auto-merge
+    needs: test
+
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.user.login == 'dependabot[bot]' &&
+      needs.test.result == 'success'
+
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Enable auto-merge
+        env:
+          GH_TOKEN: ${{ secrets.TOKEN_GITHUB }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "TOKEN_GITHUB secret is unavailable"
+            exit 1
+          fi
+
+          gh pr merge --auto --merge "$PR_URL"
