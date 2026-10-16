@@ -68,11 +68,11 @@ jobs:
     steps:
       - name: Enable auto-merge
         env:
-          GH_TOKEN: ${{ secrets.TOKEN_GITHUB }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_URL: ${{ github.event.pull_request.html_url }}
         run: |
           if [ -z "$GH_TOKEN" ]; then
-            echo "TOKEN_GITHUB secret is unavailable"
+            echo "GITHUB_TOKEN secret is unavailable"
             exit 1
           fi
 
